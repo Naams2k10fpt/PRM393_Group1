@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
-  // Thay đổi URL này thành IP LAN của bạn hoặc link Render
-  // Đối với Android Emulator: 10.0.2.2 trỏ về localhost máy tính
-  static const String defaultBaseUrl = 'http://10.0.2.2:5039';
+  static final String defaultBaseUrl = (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+      ? 'http://10.0.2.2:8080'
+      : 'http://localhost:8080';
 
   static String baseUrl = defaultBaseUrl;
 

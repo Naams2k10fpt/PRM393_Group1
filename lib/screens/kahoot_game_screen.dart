@@ -176,26 +176,48 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
 
   Widget _buildAnsweringView(KahootQuestionModel q) {
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Column(
         children: [
-          // Indicator số câu hỏi
-          Text(
-            'Câu ${q.questionIndex} / ${q.totalQuestions}',
-            style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+          // Header câu hỏi
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.flash_on, color: Colors.amber, size: 20),
+                const SizedBox(width: 6),
+                Text(
+                  'CÂU ${q.questionIndex} / ${q.totalQuestions}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
 
-          // Lưới 4 nút bấm màu sắc lớn
+          // Lưới 4 nút bấm màu sắc gradient lớn
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: List.generate(4, (index) {
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 0.95,
+              children: List.generate(q.answers.length, (index) {
+                final ans = q.answers[index];
                 return _buildKahootButton(
-                  color: KahootColors.answerColors[index],
-                  shape: KahootColors.answerShapes[index],
+                  gradient: KahootColors.answerGradients[index % 4],
+                  letter: KahootColors.answerShapes[index % 4],
+                  answerText: ans.text,
                   onTap: () => _onAnswerSelected(index),
                 );
               }),
@@ -207,24 +229,66 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
   }
 
   Widget _buildKahootButton({
-    required Color color,
-    required String shape,
+    required LinearGradient gradient,
+    required String letter,
+    required String answerText,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 6,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Center(
-          child: Text(
-            shape,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 64,
-              fontWeight: FontWeight.bold,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          splashColor: Colors.white30,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    letter,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  answerText,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
