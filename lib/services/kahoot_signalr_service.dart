@@ -112,8 +112,8 @@ class KahootSignalRService extends ChangeNotifier {
     isConnected = true;
     notifyListeners();
 
-    // Gọi JoinRoom lên server
-    await _hubConnection!.invoke('JoinRoom', args: [currentRoomCode, currentNickname, '']);
+    // Gọi JoinRoom lên server (userId là optional param, mặc định null)
+    await _hubConnection!.invoke('JoinRoom', args: [currentRoomCode, currentNickname]);
   }
 
   void _handleJoinedSuccess(List<dynamic>? args) {

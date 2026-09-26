@@ -40,21 +40,15 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
     }
   }
 
-  void _onAnswerSelected(int colorIndex) {
+  void _onAnswerSelected(KahootAnswerChoice ans) {
     if (_service.currentQuestion == null || _service.isAnswerSubmitted) return;
-
-    final question = _service.currentQuestion!;
-    final selectedAnswer = question.answers.firstWhere(
-      (a) => a.colorIndex == colorIndex,
-      orElse: () => question.answers.first,
-    );
 
     double elapsed = 0.0;
     if (_questionStartTime != null) {
       elapsed = DateTime.now().difference(_questionStartTime!).inMilliseconds / 1000.0;
     }
 
-    _service.submitAnswer(selectedAnswer.id, elapsed);
+    _service.submitAnswer(ans.id, elapsed);
   }
 
   @override
@@ -218,7 +212,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   gradient: KahootColors.answerGradients[index % 4],
                   letter: KahootColors.answerShapes[index % 4],
                   answerText: ans.text,
-                  onTap: () => _onAnswerSelected(index),
+                  onTap: () => _onAnswerSelected(ans),
                 );
               }),
             ),
