@@ -27,7 +27,10 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã nhận mã PIN: $scannedPin')),
+        SnackBar(
+          content: Text('Đã nhận mã PIN: $scannedPin'),
+          backgroundColor: KahootColors.accent,
+        ),
       );
     }
   }
@@ -38,14 +41,20 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
 
     if (pin.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập mã PIN hoặc quét mã QR')),
+        const SnackBar(
+          content: Text('Vui lòng nhập mã PIN hoặc quét mã QR'),
+          backgroundColor: KahootColors.danger,
+        ),
       );
       return;
     }
 
     if (nickname.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập biệt danh của bạn')),
+        const SnackBar(
+          content: Text('Vui lòng nhập biệt danh của bạn'),
+          backgroundColor: KahootColors.danger,
+        ),
       );
       return;
     }
@@ -66,25 +75,49 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cấu hình Server Backend'),
+        backgroundColor: KahootColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: KahootColors.border),
+        ),
+        title: const Text(
+          'Cấu hình Server Backend',
+          style: TextStyle(color: KahootColors.textPrimary, fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: urlController,
-          decoration: const InputDecoration(
+          style: const TextStyle(color: KahootColors.textPrimary),
+          decoration: InputDecoration(
             labelText: 'Server Base URL',
-            hintText: 'http://10.0.2.2:5039 hoặc link Render',
+            labelStyle: const TextStyle(color: KahootColors.textMuted),
+            hintText: 'http://10.0.2.2:8080 hoặc localhost:8080',
+            hintStyle: const TextStyle(color: KahootColors.textDim),
+            filled: true,
+            fillColor: KahootColors.elevated,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: KahootColors.border),
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+            child: const Text('Hủy', style: TextStyle(color: KahootColors.textMuted)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KahootColors.accent,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               AppConfig.baseUrl = urlController.text.trim();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Đã lưu URL: ${AppConfig.baseUrl}')),
+                SnackBar(
+                  content: Text('Đã lưu URL: ${AppConfig.baseUrl}'),
+                  backgroundColor: KahootColors.success,
+                ),
               );
             },
             child: const Text('Lưu'),
@@ -103,7 +136,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: const Icon(Icons.settings_outlined, color: KahootColors.textMuted),
             tooltip: 'Cài đặt kết nối server',
             onPressed: _showSettingsDialog,
           ),
@@ -111,111 +144,253 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo
-              const Text(
-                'KAHOOT!',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icon Header
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: KahootColors.accent.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: KahootColors.accent.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.sports_esports_rounded,
+                    color: KahootColors.accent,
+                    size: 34,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Quiz Management Mobile',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-              const SizedBox(height: 36),
+                const SizedBox(height: 16),
 
-              // Card Input
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 8,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                // Title
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [KahootColors.accent, KahootColors.cyan],
+                  ).createShader(bounds),
+                  child: const Text(
+                    'QUIZ ARENA',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Đấu trường thi đấu trắc nghiệm thời gian thực',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: KahootColors.textMuted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Modern Glass Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: KahootColors.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: KahootColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(28.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Label PIN
+                      const Text(
+                        'MÃ PHÒNG (PIN)',
+                        style: TextStyle(
+                          color: KahootColors.textMuted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
                       // PIN Input
                       TextField(
                         controller: _pinController,
                         textAlign: TextAlign.center,
                         textCapitalization: TextCapitalization.characters,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 6,
+                          color: KahootColors.cyan,
+                          fontFamily: 'monospace',
+                        ),
                         decoration: InputDecoration(
-                          hintText: 'MÃ PIN (6 SỐ)',
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
+                          hintText: '6 KÝ TỰ',
+                          hintStyle: const TextStyle(
+                            color: KahootColors.textDim,
+                            letterSpacing: 2,
+                            fontSize: 18,
                           ),
-                          prefixIcon: const Icon(Icons.pin),
+                          filled: true,
+                          fillColor: KahootColors.elevated,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: KahootColors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: KahootColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: KahootColors.cyan, width: 2),
+                          ),
+                          prefixIcon: const Icon(Icons.tag_rounded, color: KahootColors.cyan),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
 
                       // Nút quét QR Code
                       OutlinedButton.icon(
                         onPressed: _openQrScanner,
-                        icon: const Icon(Icons.qr_code_scanner, color: KahootColors.blue),
+                        icon: const Icon(Icons.qr_code_scanner_rounded, color: KahootColors.cyan, size: 20),
                         label: const Text(
-                          'Quét mã QR bằng Camera',
-                          style: TextStyle(color: KahootColors.blue, fontWeight: FontWeight.bold),
+                          'Quét mã QR từ Host',
+                          style: TextStyle(
+                            color: KahootColors.cyan,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(50),
-                          side: const BorderSide(color: KahootColors.blue, width: 2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          minimumSize: const Size.fromHeight(48),
+                          side: const BorderSide(color: KahootColors.cyan, width: 1.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          backgroundColor: KahootColors.cyan.withValues(alpha: 0.05),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 20),
+
+                      // Label Nickname
+                      const Text(
+                        'BIỆT DANH THÍ SINH',
+                        style: TextStyle(
+                          color: KahootColors.textMuted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
                       // Nickname Input
                       TextField(
                         controller: _nicknameController,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: KahootColors.textPrimary,
+                        ),
                         decoration: InputDecoration(
-                          hintText: 'Biệt danh của bạn',
+                          hintText: 'Nhập biệt danh của bạn...',
+                          hintStyle: const TextStyle(color: KahootColors.textDim, fontSize: 15),
                           filled: true,
-                          fillColor: Colors.grey.shade100,
+                          fillColor: KahootColors.elevated,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: KahootColors.border),
                           ),
-                          prefixIcon: const Icon(Icons.person),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: KahootColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: KahootColors.accent, width: 2),
+                          ),
+                          prefixIcon: const Icon(Icons.person_outline_rounded, color: KahootColors.accent),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
-                      // Nút Tham gia
-                      ElevatedButton(
-                        onPressed: _joinGame,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          elevation: 4,
+                      // Nút Tham gia Gradient sang trọng
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [KahootColors.accent, Color(0xFF4F46E5)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: KahootColors.accent.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
-                        child: const Text(
-                          'THAM GIA NGAY',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        child: ElevatedButton(
+                          onPressed: _joinGame,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            minimumSize: const Size.fromHeight(56),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.bolt_rounded, size: 22),
+                              SizedBox(width: 8),
+                              Text(
+                                'VÀO ĐẤU TRƯỜNG',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 24),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.security, size: 14, color: KahootColors.textDim),
+                    SizedBox(width: 6),
+                    Text(
+                      'Realtime WebSocket • Quiz Arena System',
+                      style: TextStyle(color: KahootColors.textDim, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+

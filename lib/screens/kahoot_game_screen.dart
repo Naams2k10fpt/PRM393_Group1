@@ -64,28 +64,75 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
       child: Scaffold(
         backgroundColor: KahootColors.background,
         appBar: AppBar(
-          backgroundColor: Colors.black26,
+          backgroundColor: KahootColors.surface,
           elevation: 0,
+          shape: const Border(
+            bottom: BorderSide(color: KahootColors.border, width: 1),
+          ),
           leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: const Icon(Icons.close_rounded, color: KahootColors.textMuted),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(
-            widget.nickname,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          title: Row(
+            children: [
+              const Icon(Icons.person_rounded, size: 20, color: KahootColors.cyan),
+              const SizedBox(width: 8),
+              Text(
+                widget.nickname,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: KahootColors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: KahootColors.elevated,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: KahootColors.border),
+                ),
+                child: Text(
+                  widget.roomCode,
+                  style: const TextStyle(
+                    color: KahootColors.cyan,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ],
           ),
           actions: [
             Consumer<KahootSignalRService>(
               builder: (context, s, _) => Container(
                 margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amber.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  '${s.totalScore} pts',
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, size: 18, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${s.totalScore} pts',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -98,9 +145,16 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text('Đang kết nối vào phòng...', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    CircularProgressIndicator(color: KahootColors.accent),
+                    SizedBox(height: 18),
+                    Text(
+                      'Đang kết nối vào đấu trường...',
+                      style: TextStyle(
+                        color: KahootColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -134,35 +188,85 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
   Widget _buildLobbyWaitingView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white24,
-                shape: BoxShape.circle,
+        padding: const EdgeInsets.all(28.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: KahootColors.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: KahootColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
               ),
-              child: const Icon(Icons.celebration, color: Colors.amber, size: 72),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Bạn đã vào phòng!',
-              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Mã PIN: ${widget.roomCode}',
-              style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Hãy nhìn lên màn hình chính và chờ chủ phòng bắt đầu trận đấu...',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [KahootColors.accent.withValues(alpha: 0.2), KahootColors.cyan.withValues(alpha: 0.15)],
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: KahootColors.accent.withValues(alpha: 0.4)),
+                ),
+                child: const Icon(Icons.flash_on_rounded, color: KahootColors.cyan, size: 44),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'SẴN SÀNG CHIẾN ĐẤU!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: KahootColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: KahootColors.elevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: KahootColors.border),
+                ),
+                child: Text(
+                  'PHÒNG: ${widget.roomCode}',
+                  style: const TextStyle(
+                    color: KahootColors.cyan,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Bạn đã vào phòng thi đấu an toàn.\nHãy nhìn lên màn hình chính của Host và chờ trận đấu bắt đầu!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: KahootColors.textMuted, fontSize: 14, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: KahootColors.accent,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -175,21 +279,22 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
         children: [
           // Header câu hỏi
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white10,
-              borderRadius: BorderRadius.circular(20),
+              color: KahootColors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: KahootColors.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.flash_on, color: Colors.amber, size: 20),
+                const Icon(Icons.bolt_rounded, color: KahootColors.warning, size: 20),
                 const SizedBox(width: 6),
                 Text(
-                  'CÂU ${q.questionIndex} / ${q.totalQuestions}',
+                  'CÂU HỎI ${q.questionIndex} / ${q.totalQuestions}',
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                    color: KahootColors.textPrimary,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.1,
                   ),
@@ -199,7 +304,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Lưới 4 nút bấm màu sắc gradient lớn
+          // Lưới 4 nút bấm phong cách Cyber Arena
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
@@ -231,13 +336,13 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -245,19 +350,19 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           splashColor: Colors.white30,
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(14.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 54,
+                  height: 54,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -269,7 +374,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   answerText,
                   textAlign: TextAlign.center,
@@ -278,8 +383,8 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
                   ),
                 ),
               ],
@@ -291,64 +396,147 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
   }
 
   Widget _buildSubmittedWaitingView() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.check_circle, color: Colors.greenAccent, size: 90),
-          SizedBox(height: 20),
-          Text(
-            'Đã nhận câu trả lời!',
-            style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: KahootColors.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: KahootColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          SizedBox(height: 8),
-          Text(
-            'Đang chờ những người khác hoàn thành...',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: KahootColors.success.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: KahootColors.success.withValues(alpha: 0.4)),
+                ),
+                child: const Icon(Icons.shield_outlined, color: KahootColors.success, size: 44),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'ĐÃ KHÓA LỰA CHỌN!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: KahootColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Lựa chọn của bạn đã được gửi an toàn lên hệ thống.\nĐang chờ thời gian kết thúc để chấm điểm...',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: KahootColors.textMuted, fontSize: 14, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: KahootColors.success,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildResultView(KahootResultModel res) {
     final bool isCorrect = res.isCorrect;
-    return Container(
-      color: isCorrect ? KahootColors.green : KahootColors.red,
-      width: double.infinity,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isCorrect ? Icons.check_circle_outline : Icons.highlight_off,
-            color: Colors.white,
-            size: 100,
+    final color = isCorrect ? KahootColors.success : KahootColors.danger;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: KahootColors.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.25),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            isCorrect ? 'CHÍNH XÁC!' : 'CHƯA ĐÚNG!',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color.withValues(alpha: 0.4)),
+                ),
+                child: Icon(
+                  isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                  color: color,
+                  size: 52,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                isCorrect ? 'CHÍNH XÁC!' : 'CHƯA ĐÚNG!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: KahootColors.elevated,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: KahootColors.border),
+                ),
+                child: Text(
+                  isCorrect ? '+${res.scoreEarned} điểm' : '+0 điểm',
+                  style: TextStyle(
+                    color: isCorrect ? KahootColors.warning : KahootColors.textMuted,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Hãy nhìn lên màn hình chính để xem thứ hạng!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: KahootColors.textMuted, fontSize: 14),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            isCorrect ? '+${res.scoreEarned} điểm' : '+0 điểm',
-            style: const TextStyle(
-              color: Colors.amberAccent,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Nhìn lên màn hình chính để xem bảng xếp hạng!',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -356,33 +544,84 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
   Widget _buildGameOverView(KahootSignalRService s) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('🏁', style: TextStyle(fontSize: 80)),
-            const SizedBox(height: 16),
-            const Text(
-              'HOÀN THÀNH TRẬN ĐẤU!',
-              style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Tổng điểm: ${s.totalScore} pts',
-              style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 36),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.all(28.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: KahootColors.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: KahootColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
               ),
-              child: const Text('VỀ TRANG CHỦ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 72)),
+              const SizedBox(height: 16),
+              const Text(
+                'HOÀN THÀNH TRẬN ĐẤU!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: KahootColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: KahootColors.elevated,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: KahootColors.border),
+                ),
+                child: Text(
+                  'Tổng điểm: ${s.totalScore} pts',
+                  style: const TextStyle(
+                    color: KahootColors.warning,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [KahootColors.accent, Color(0xFF4F46E5)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: KahootColors.accent.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('VỀ TRANG CHỦ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
