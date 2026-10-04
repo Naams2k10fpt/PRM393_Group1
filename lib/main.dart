@@ -1,26 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'data/api/api_client.dart';
+import 'data/api/token_storage.dart';
+import 'data/repositories/auth_repository.dart';
+import 'data/repositories/profile_repository.dart';
+import 'features/auth/auth_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(QuizManagementApp(router: createRouter()));
+
+  final tokens = SecureTokenStorage();
+  final api = ApiClient(tokens: tokens);
+  final authRepository = AuthRepository(api, tokens);
+  final profileRepository = ProfileRepository(api, tokens);
+  final auth = AuthController(authRepository, profileRepository);
+  api.onUnauthorized = auth.handleUnauthorized;
+
+  runApp(QuizManagementApp(
+    auth: auth,
+    authRepository: authRepository,
+    profileRepository: profileRepository,
+  ));
+  auth.restoreSession();
 }
 
-class QuizManagementApp extends StatelessWidget {
-  const QuizManagementApp({super.key, required this.router});
+/// Provides the repositories and [AuthController] to every screen. Tests pass fakes here.
+class QuizManagementApp extends StatefulWidget {
+  const QuizManagementApp({
+    super.key,
+    required this.auth,
+    required this.authRepository,
+    required this.profileRepository,
+  });
 
-  final GoRouter router;
+  final AuthController auth;
+  final AuthRepository authRepository;
+  final ProfileRepository profileRepository;
+
+  @override
+  State<QuizManagementApp> createState() => _QuizManagementAppState();
+}
+
+class _QuizManagementAppState extends State<QuizManagementApp> {
+  late final GoRouter _router = createRouter(widget.auth);
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Quiz Management',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
-      routerConfig: router,
+    return MultiProvider(
+      providers: [
+        Provider<AuthRepository>.value(value: widget.authRepository),
+        Provider<ProfileRepository>.value(value: widget.profileRepository),
+        ChangeNotifierProvider<AuthController>.value(value: widget.auth),
+      ],
+      child: MaterialApp.router(
+        title: 'Quiz Management',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.dark(),
+        routerConfig: _router,
+      ),
     );
   }
 }

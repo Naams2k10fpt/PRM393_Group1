@@ -357,12 +357,15 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                             children: [
                               Icon(Icons.bolt_rounded, size: 22),
                               SizedBox(width: 8),
-                              Text(
-                                'VÀO ĐẤU TRƯỜNG',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1,
+                              Flexible(
+                                child: Text(
+                                  'VÀO ĐẤU TRƯỜNG',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1,
+                                  ),
                                 ),
                               ),
                             ],
