@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/theme.dart';
-import '../services/kahoot_signalr_service.dart';
+import 'kahoot_colors.dart';
+import 'kahoot_signalr_service.dart';
 
 class KahootGameScreen extends StatefulWidget {
   final String roomCode;

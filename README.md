@@ -1,16 +1,23 @@
-# quiz_management_mobile
+# Quiz Management Mobile (PRM393)
 
-A new Flutter project.
+Flutter mobile app for the Quiz Management system — the mobile version of
+[PRN232_Group5](https://github.com/Naams2k10fpt/PRN232_Group5) (web: https://prn232-group5.onrender.com).
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Account: login, register (email verification), profile, change password
+- Kahoot Live player: join by PIN or QR code, answer in realtime (SignalR)
+- More coming: subjects & flashcards, personal quizzes, study-group chat
 
-A few resources to get you started if this is your first Flutter project:
+## Getting started
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+flutter pub get
+flutter test
+flutter run -d chrome                                             # against the Render backend
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:5039   # against a local backend
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Demo account (also on Render): `user.demo@quiz.local` / `Test@123456`.
+
+Project layout and conventions: see [CLAUDE.md](CLAUDE.md).
