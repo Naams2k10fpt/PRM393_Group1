@@ -15,8 +15,11 @@ class AuthController extends ChangeNotifier {
   final AuthRepository _auth;
   final ProfileRepository _profile;
 
-  AuthStatus _status = AuthStatus.unknown;
-  AuthStatus get status => _status;
+  AuthStatus get status => statusListenable.value;
+
+  /// Changes only when the user signs in or out; the router listens to this, not to the whole controller,
+  /// so editing the profile does not rebuild the page stack.
+  final ValueNotifier<AuthStatus> statusListenable = ValueNotifier(AuthStatus.unknown);
 
   AppUser? _user;
   AppUser? get user => _user;
@@ -29,7 +32,7 @@ class AuthController extends ChangeNotifier {
   /// On app start: a stored token is only trusted after the backend accepts it, because the backend revokes
   /// tokens on password change or when the account is disabled.
   Future<void> restoreSession() async {
-    _status = AuthStatus.unknown;
+    statusListenable.value = AuthStatus.unknown;
     _startupError = null;
     notifyListeners();
 
@@ -40,7 +43,7 @@ class AuthController extends ChangeNotifier {
 
     try {
       _user = await _profile.getProfile();
-      _status = AuthStatus.signedIn;
+      statusListenable.value = AuthStatus.signedIn;
       notifyListeners();
     } on ApiException catch (e) {
       if (e.statusCode == 401) {
@@ -55,7 +58,7 @@ class AuthController extends ChangeNotifier {
   /// Throws [ApiException] for the login screen to show.
   Future<void> login(String email, String password) async {
     _user = await _auth.login(email, password);
-    _status = AuthStatus.signedIn;
+    statusListenable.value = AuthStatus.signedIn;
     _startupError = null;
     notifyListeners();
   }
@@ -67,7 +70,7 @@ class AuthController extends ChangeNotifier {
 
   /// ApiClient saw a 401 with a token: it is already cleared.
   void handleUnauthorized() {
-    if (_status == AuthStatus.signedIn) _setSignedOut();
+    if (status == AuthStatus.signedIn) _setSignedOut();
   }
 
   void updateUser(AppUser user) {
@@ -75,9 +78,15 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void dispose() {
+    statusListenable.dispose();
+    super.dispose();
+  }
+
   void _setSignedOut() {
     _user = null;
-    _status = AuthStatus.signedOut;
+    statusListenable.value = AuthStatus.signedOut;
     notifyListeners();
   }
 }
