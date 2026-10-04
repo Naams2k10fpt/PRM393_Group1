@@ -1,10 +1,15 @@
-import 'package:flutter/foundation.dart';
-
+/// Backend location. Set at build time with `--dart-define=API_BASE_URL=http://localhost:5039`;
+/// defaults to the Render production backend.
 class AppConfig {
-  static final String defaultBaseUrl = (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
-      ? 'http://10.0.2.2:8080'
-      : 'http://localhost:8080';
+  AppConfig._();
 
+  static const String productionBaseUrl = 'https://prn232-group5.onrender.com';
+
+  static const String defaultBaseUrl =
+      String.fromEnvironment('API_BASE_URL', defaultValue: productionBaseUrl);
+
+  /// Mutable so the Kahoot entry screen's server dialog can point the app elsewhere at runtime.
+  /// The API client reads it on every request.
   static String baseUrl = defaultBaseUrl;
 
   static String get kahootHubUrl => '$baseUrl/hubs/kahoot';
