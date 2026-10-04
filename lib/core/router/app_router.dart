@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_controller.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/register_screen.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/kahoot/kahoot_entry_screen.dart';
@@ -12,11 +13,13 @@ class AppRoutes {
 
   static const splash = '/splash';
   static const login = '/login';
+  static const register = '/register';
+  static const checkEmail = '/check-email';
   static const home = '/';
   static const kahoot = '/kahoot';
 
   /// Reachable without an account. Kahoot players may join as guests.
-  static const public = {login, kahoot};
+  static const public = {login, register, checkEmail, kahoot};
 }
 
 /// Re-evaluates [redirect] whenever [auth] changes, so login/logout/revoked tokens navigate by themselves.
@@ -28,6 +31,13 @@ GoRouter createRouter(AuthController auth) {
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(path: AppRoutes.register, builder: (context, state) => const RegisterScreen()),
+      GoRoute(
+        path: AppRoutes.checkEmail,
+        // Only reachable from a successful registration; without its arguments (e.g. app restart) go to login.
+        redirect: (context, state) => state.extra is CheckEmailArgs ? null : AppRoutes.login,
+        builder: (context, state) => CheckEmailScreen(args: state.extra! as CheckEmailArgs),
+      ),
       GoRoute(path: AppRoutes.home, builder: (context, state) => const HomeScreen()),
       // Kahoot screens push their own sub-screens (QR scanner, game) with Navigator.
       GoRoute(path: AppRoutes.kahoot, builder: (context, state) => const KahootEntryScreen()),
@@ -42,6 +52,7 @@ String? redirectFor(AuthStatus status, String location) {
     case AuthStatus.signedOut:
       return AppRoutes.public.contains(location) ? null : AppRoutes.login;
     case AuthStatus.signedIn:
-      return location == AppRoutes.splash || location == AppRoutes.login ? AppRoutes.home : null;
+      const signedOutOnly = {AppRoutes.splash, AppRoutes.login, AppRoutes.register, AppRoutes.checkEmail};
+      return signedOutOnly.contains(location) ? AppRoutes.home : null;
   }
 }
