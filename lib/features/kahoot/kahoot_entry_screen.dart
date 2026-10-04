@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/config.dart';
-import '../core/theme.dart';
+import '../../core/config/app_config.dart';
+import 'kahoot_colors.dart';
 import 'qr_scanner_screen.dart';
 import 'kahoot_game_screen.dart';
 
@@ -379,9 +379,11 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                   children: [
                     Icon(Icons.security, size: 14, color: KahootColors.textDim),
                     SizedBox(width: 6),
-                    Text(
-                      'Realtime WebSocket • Quiz Arena System',
-                      style: TextStyle(color: KahootColors.textDim, fontSize: 12),
+                    Flexible(
+                      child: Text(
+                        'Realtime WebSocket • Quiz Arena System',
+                        style: TextStyle(color: KahootColors.textDim, fontSize: 12),
+                      ),
                     ),
                   ],
                 ),

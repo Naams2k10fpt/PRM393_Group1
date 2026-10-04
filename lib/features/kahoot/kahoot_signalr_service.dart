@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/signalr_client.dart';
-import '../core/config.dart';
+import '../../core/config/app_config.dart';
 
 class KahootQuestionModel {
   final int questionIndex;

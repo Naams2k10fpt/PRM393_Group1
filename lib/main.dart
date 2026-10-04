@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
-import 'core/theme.dart';
-import 'screens/kahoot_entry_screen.dart';
+import 'package:go_router/go_router.dart';
+
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const QuizManagementApp());
+  runApp(QuizManagementApp(router: createRouter()));
 }
 
 class QuizManagementApp extends StatelessWidget {
-  const QuizManagementApp({super.key});
+  const QuizManagementApp({super.key, required this.router});
+
+  final GoRouter router;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Quiz Management Mobile',
+    return MaterialApp.router(
+      title: 'Quiz Management',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: KahootColors.background,
-          primary: KahootColors.background,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
-      home: const KahootEntryScreen(),
+      theme: AppTheme.dark(),
+      routerConfig: router,
     );
   }
 }
