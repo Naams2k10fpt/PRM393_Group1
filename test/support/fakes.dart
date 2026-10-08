@@ -1,17 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_management_mobile/data/api/api_exception.dart';
+import 'package:quiz_management_mobile/data/api/api_client.dart';
+import 'package:quiz_management_mobile/data/api/token_storage.dart';
 import 'package:quiz_management_mobile/data/models/app_user.dart';
 import 'package:quiz_management_mobile/data/repositories/auth_repository.dart';
 import 'package:quiz_management_mobile/data/repositories/profile_repository.dart';
 import 'package:quiz_management_mobile/features/auth/auth_controller.dart';
 import 'package:quiz_management_mobile/main.dart';
 
-const demoUser = AppUser(id: 'u1', username: 'user_demo', email: 'user.demo@quiz.local', role: 'User');
+const demoUser = AppUser(
+  id: 'u1',
+  username: 'user_demo',
+  email: 'user.demo@quiz.local',
+  role: 'User',
+);
 const demoPassword = 'Test@123456';
 
-const unauthorized = ApiException(code: 'unauthorized', message: 'Bạn cần đăng nhập.', statusCode: 401);
-const offline = ApiException(code: ApiException.networkError, message: 'Không kết nối được máy chủ.');
+const unauthorized = ApiException(
+  code: 'unauthorized',
+  message: 'Bạn cần đăng nhập.',
+  statusCode: 401,
+);
+const offline = ApiException(
+  code: ApiException.networkError,
+  message: 'Không kết nối được máy chủ.',
+);
 
 /// In-memory stand-in for the backend's /api/auth endpoints.
 class FakeAuthRepository implements AuthRepository {
@@ -85,7 +99,10 @@ class FakeProfileRepository implements ProfileRepository {
   }
 
   @override
-  Future<AppUser> updateProfile({required String username, String? avatarUrl}) async {
+  Future<AppUser> updateProfile({
+    required String username,
+    String? avatarUrl,
+  }) async {
     calls.add('update:$username:${avatarUrl ?? ''}');
     if (updateError != null) throw updateError!;
     return user = AppUser(
@@ -111,8 +128,8 @@ class FakeProfileRepository implements ProfileRepository {
 /// Boots the real app (router, providers, screens) on fake repositories.
 class TestApp {
   TestApp({String? token, FakeProfileRepository? profile})
-      : authRepository = FakeAuthRepository(token: token),
-        profileRepository = profile ?? FakeProfileRepository() {
+    : authRepository = FakeAuthRepository(token: token),
+      profileRepository = profile ?? FakeProfileRepository() {
     auth = AuthController(authRepository, profileRepository);
   }
 
@@ -126,11 +143,14 @@ class TestApp {
     tester.view.devicePixelRatio = 2.75;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(QuizManagementApp(
-      auth: auth,
-      authRepository: authRepository,
-      profileRepository: profileRepository,
-    ));
+    await tester.pumpWidget(
+      QuizManagementApp(
+        auth: auth,
+        authRepository: authRepository,
+        profileRepository: profileRepository,
+        api: ApiClient(tokens: InMemoryTokenStorage()),
+      ),
+    );
     await auth.restoreSession();
     await tester.pumpAndSettle();
   }

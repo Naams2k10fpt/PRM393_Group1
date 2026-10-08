@@ -7,7 +7,9 @@ import 'core/theme/app_theme.dart';
 import 'data/api/api_client.dart';
 import 'data/api/token_storage.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/groups_repository.dart';
 import 'data/repositories/profile_repository.dart';
+import 'data/repositories/quiz_repository.dart';
 import 'features/auth/auth_controller.dart';
 
 void main() {
@@ -20,11 +22,14 @@ void main() {
   final auth = AuthController(authRepository, profileRepository);
   api.onUnauthorized = auth.handleUnauthorized;
 
-  runApp(QuizManagementApp(
-    auth: auth,
-    authRepository: authRepository,
-    profileRepository: profileRepository,
-  ));
+  runApp(
+    QuizManagementApp(
+      auth: auth,
+      authRepository: authRepository,
+      profileRepository: profileRepository,
+      api: api,
+    ),
+  );
   auth.restoreSession();
 }
 
@@ -35,11 +40,13 @@ class QuizManagementApp extends StatefulWidget {
     required this.auth,
     required this.authRepository,
     required this.profileRepository,
+    required this.api,
   });
 
   final AuthController auth;
   final AuthRepository authRepository;
   final ProfileRepository profileRepository;
+  final ApiClient api;
 
   @override
   State<QuizManagementApp> createState() => _QuizManagementAppState();
@@ -60,6 +67,8 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
       providers: [
         Provider<AuthRepository>.value(value: widget.authRepository),
         Provider<ProfileRepository>.value(value: widget.profileRepository),
+        Provider<QuizRepository>(create: (_) => QuizRepository(widget.api)),
+        Provider<GroupsRepository>(create: (_) => GroupsRepository(widget.api)),
         ChangeNotifierProvider<AuthController>.value(value: widget.auth),
       ],
       child: MaterialApp.router(
