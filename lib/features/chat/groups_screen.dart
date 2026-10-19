@@ -5,10 +5,91 @@ import '../../data/api/api_exception.dart';
 import '../../data/repositories/groups_repository.dart';
 import 'chat_room_screen.dart';
 
+typedef _GroupDraft = ({String name, String description, int mode});
+
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
   @override
   State<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _CreateGroupDialog extends StatefulWidget {
+  const _CreateGroupDialog();
+
+  @override
+  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
+}
+
+class _CreateGroupDialogState extends State<_CreateGroupDialog> {
+  final formKey = GlobalKey<FormState>();
+  final name = TextEditingController();
+  final description = TextEditingController();
+  int mode = 0;
+
+  @override
+  void dispose() {
+    name.dispose();
+    description.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Tạo nhóm học'),
+    content: SingleChildScrollView(
+      child: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: name,
+              maxLength: 100,
+              decoration: const InputDecoration(labelText: 'Tên nhóm'),
+              validator:
+                  (value) =>
+                      value == null || value.trim().isEmpty
+                          ? 'Nhập tên nhóm.'
+                          : null,
+            ),
+            TextFormField(
+              controller: description,
+              maxLength: 500,
+              decoration: const InputDecoration(labelText: 'Mô tả'),
+            ),
+            DropdownButtonFormField<int>(
+              initialValue: mode,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Quyền tham gia'),
+              items: const [
+                DropdownMenuItem(value: 0, child: Text('Tham gia tự do')),
+                DropdownMenuItem(value: 1, child: Text('Cần phê duyệt')),
+              ],
+              onChanged: (value) => setState(() => mode = value ?? 0),
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Hủy'),
+      ),
+      FilledButton(
+        onPressed: () {
+          if (formKey.currentState!.validate()) {
+            Navigator.pop(context, (
+              name: name.text.trim(),
+              description: description.text.trim(),
+              mode: mode,
+            ));
+          }
+        },
+        child: const Text('Tạo'),
+      ),
+    ],
+  );
 }
 
 class _GroupsScreenState extends State<GroupsScreen> {
@@ -16,6 +97,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   List<StudyGroup> mine = [];
   List<StudyGroup> discover = [];
   bool loading = true;
+  final pendingActions = <int>{};
   String? error;
 
   @override
@@ -25,6 +107,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() {
       loading = true;
       error = null;
@@ -45,76 +128,22 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   Future<void> _create() async {
-    final name = TextEditingController();
-    final description = TextEditingController();
-    var mode = 0;
-    final ok = await showDialog<bool>(
+    final request = await showDialog<_GroupDraft>(
       context: context,
-      builder:
-          (dialogContext) => StatefulBuilder(
-            builder:
-                (context, update) => AlertDialog(
-                  title: const Text('Tạo nhóm học'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: name,
-                        maxLength: 100,
-                        decoration: const InputDecoration(
-                          labelText: 'Tên nhóm',
-                        ),
-                      ),
-                      TextField(
-                        controller: description,
-                        maxLength: 500,
-                        decoration: const InputDecoration(labelText: 'Mô tả'),
-                      ),
-                      DropdownButtonFormField<int>(
-                        initialValue: mode,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 0,
-                            child: Text('Tham gia tự do'),
-                          ),
-                          DropdownMenuItem(
-                            value: 1,
-                            child: Text('Cần phê duyệt'),
-                          ),
-                        ],
-                        onChanged: (value) => update(() => mode = value ?? 0),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Hủy'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Tạo'),
-                    ),
-                  ],
-                ),
-          ),
+      builder: (_) => const _CreateGroupDialog(),
     );
-    if (ok == true) {
-      try {
-        if (name.text.trim().isEmpty) {
-          throw const FormatException('Nhập tên nhóm.');
-        }
-        await repo.create(name.text, description.text, mode);
-        await _load();
-      } catch (e) {
-        _showError(e);
-      }
+    if (request == null || !mounted) return;
+    try {
+      await repo.create(request.name, request.description, request.mode);
+      await _load();
+    } catch (e) {
+      _showError(e);
     }
-    name.dispose();
-    description.dispose();
   }
 
   Future<void> _join(StudyGroup group) async {
+    if (!pendingActions.add(group.id)) return;
+    setState(() {});
     try {
       await repo.join(group.id);
       await _load();
@@ -125,6 +154,21 @@ class _GroupsScreenState extends State<GroupsScreen> {
       }
     } catch (e) {
       _showError(e);
+    } finally {
+      if (mounted) setState(() => pendingActions.remove(group.id));
+    }
+  }
+
+  Future<void> _cancelRequest(StudyGroup group) async {
+    if (!pendingActions.add(group.id)) return;
+    setState(() {});
+    try {
+      await repo.cancelJoinRequest(group.id);
+      await _load();
+    } catch (e) {
+      _showError(e);
+    } finally {
+      if (mounted) setState(() => pendingActions.remove(group.id));
     }
   }
 
@@ -162,6 +206,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
             : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 children: [
                   if (error != null)
@@ -220,9 +265,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
                         ),
                         trailing:
                             group.hasPendingRequest
-                                ? const Text('Đang chờ')
+                                ? TextButton(
+                                  onPressed:
+                                      pendingActions.contains(group.id)
+                                          ? null
+                                          : () => _cancelRequest(group),
+                                  child: const Text('Hủy yêu cầu'),
+                                )
                                 : TextButton(
-                                  onPressed: () => _join(group),
+                                  onPressed:
+                                      pendingActions.contains(group.id)
+                                          ? null
+                                          : () => _join(group),
                                   child: const Text('Tham gia'),
                                 ),
                       ),

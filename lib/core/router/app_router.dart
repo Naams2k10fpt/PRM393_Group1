@@ -4,6 +4,8 @@ import '../../features/auth/auth_controller.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/auth/splash_screen.dart';
+import '../../features/decks/deck_list_screen.dart';
+import '../../features/flashcards/flashcard_study_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/chat/groups_screen.dart';
 import '../../features/kahoot/kahoot_entry_screen.dart';
@@ -27,6 +29,14 @@ class AppRoutes {
   static const profile = '/profile';
   static const editProfile = '/profile/edit';
   static const changePassword = '/profile/change-password';
+  static const decksOfSubject = '/subjects/:subjectId/decks';
+  static const flashcardStudy = '/decks/:deckId/study';
+
+  /// Concrete path for one subject's decks; [decksOfSubject] is the pattern it matches.
+  static String decksFor(String subjectId) => '/subjects/$subjectId/decks';
+
+  /// Concrete path for one deck's study session; [flashcardStudy] is the pattern.
+  static String studyFor(String deckId) => '/decks/$deckId/study';
 
   /// Reachable without an account. Kahoot players may join as guests.
   static const public = {login, register, checkEmail, kahoot};
@@ -81,6 +91,22 @@ GoRouter createRouter(AuthController auth) {
                 builder: (context, state) => const ChangePasswordScreen(),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'subjects/:subjectId/decks',
+            builder:
+                (context, state) => DeckListScreen(
+                  subjectId: state.pathParameters['subjectId']!,
+                  subjectName: state.extra as String?,
+                ),
+          ),
+          GoRoute(
+            path: 'decks/:deckId/study',
+            builder:
+                (context, state) => FlashcardStudyScreen(
+                  deckId: state.pathParameters['deckId']!,
+                  deckTitle: state.extra as String?,
+                ),
           ),
         ],
       ),

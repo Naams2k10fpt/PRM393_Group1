@@ -7,6 +7,8 @@ import 'core/theme/app_theme.dart';
 import 'data/api/api_client.dart';
 import 'data/api/token_storage.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/catalog_repository.dart';
+import 'data/repositories/flashcard_repository.dart';
 import 'data/repositories/groups_repository.dart';
 import 'data/repositories/profile_repository.dart';
 import 'data/repositories/quiz_repository.dart';
@@ -19,6 +21,8 @@ void main() {
   final api = ApiClient(tokens: tokens);
   final authRepository = AuthRepository(api, tokens);
   final profileRepository = ProfileRepository(api, tokens);
+  final catalogRepository = CatalogRepository(api);
+  final flashcardRepository = FlashcardRepository(api);
   final auth = AuthController(authRepository, profileRepository);
   api.onUnauthorized = auth.handleUnauthorized;
 
@@ -27,7 +31,10 @@ void main() {
       auth: auth,
       authRepository: authRepository,
       profileRepository: profileRepository,
-      api: api,
+      catalogRepository: catalogRepository,
+      flashcardRepository: flashcardRepository,
+      quizRepository: QuizRepository(api),
+      groupsRepository: GroupsRepository(api),
     ),
   );
   auth.restoreSession();
@@ -40,13 +47,19 @@ class QuizManagementApp extends StatefulWidget {
     required this.auth,
     required this.authRepository,
     required this.profileRepository,
-    required this.api,
+    required this.catalogRepository,
+    required this.flashcardRepository,
+    required this.quizRepository,
+    required this.groupsRepository,
   });
 
   final AuthController auth;
   final AuthRepository authRepository;
   final ProfileRepository profileRepository;
-  final ApiClient api;
+  final CatalogRepository catalogRepository;
+  final FlashcardRepository flashcardRepository;
+  final QuizRepository quizRepository;
+  final GroupsRepository groupsRepository;
 
   @override
   State<QuizManagementApp> createState() => _QuizManagementAppState();
@@ -67,8 +80,10 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
       providers: [
         Provider<AuthRepository>.value(value: widget.authRepository),
         Provider<ProfileRepository>.value(value: widget.profileRepository),
-        Provider<QuizRepository>(create: (_) => QuizRepository(widget.api)),
-        Provider<GroupsRepository>(create: (_) => GroupsRepository(widget.api)),
+        Provider<CatalogRepository>.value(value: widget.catalogRepository),
+        Provider<FlashcardRepository>.value(value: widget.flashcardRepository),
+        Provider<QuizRepository>.value(value: widget.quizRepository),
+        Provider<GroupsRepository>.value(value: widget.groupsRepository),
         ChangeNotifierProvider<AuthController>.value(value: widget.auth),
       ],
       child: MaterialApp.router(

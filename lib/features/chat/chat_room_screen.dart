@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:signalr_netcore/signalr_client.dart';
 
-import '../../core/config/app_config.dart';
 import '../../data/api/api_exception.dart';
+import '../../data/realtime/chat_connection.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../auth/auth_controller.dart';
 
@@ -19,12 +20,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   late final String userId = context.read<AuthController>().user!.id;
   final input = TextEditingController();
   final scroll = ScrollController();
-  HubConnection? hub;
+  ChatConnection? hub;
   final messages = <ChatMessage>[];
   bool loading = true;
   bool loadingOlder = false;
   bool hasOlder = true;
   bool connected = false;
+  bool connecting = false;
   bool sending = false;
   String? error;
 
@@ -36,75 +38,71 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   void dispose() {
-    final connection = hub;
-    if (connection != null) {
-      connection
-          .invoke('LeaveGroup', args: [widget.group.id])
-          .catchError((_) => null)
-          .whenComplete(() => connection.stop());
-    }
+    unawaited(hub?.close().catchError((Object _) {}));
     input.dispose();
     scroll.dispose();
     super.dispose();
   }
 
   Future<void> _open() async {
+    if (connecting) return;
+    setState(() {
+      connecting = true;
+      connected = false;
+      error = null;
+    });
+    final previous = hub;
     try {
-      await _refresh();
-      final connection =
-          HubConnectionBuilder()
-              .withUrl(
-                '${AppConfig.baseUrl}/hubs/chat',
-                options: HttpConnectionOptions(
-                  accessTokenFactory: repo.api.accessToken,
-                ),
-              )
-              .withAutomaticReconnect()
-              .build();
+      await previous?.close();
+      if (!mounted) return;
+      final connection = repo.openChat(widget.group.id);
       hub = connection;
-      connection.on('ReceiveMessage', (args) {
-        if (args == null || args.isEmpty || args[0] is! Map) return;
-        final message = ChatMessage.fromJson(
-          Map<String, dynamic>.from(args[0] as Map),
-        );
-        if (message.groupId == widget.group.id) _add(message);
-      });
-      connection.on('GroupAccessRevoked', (args) {
-        if (args?.isNotEmpty == true &&
-            args![0] == widget.group.id &&
-            mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bạn không còn quyền vào nhóm.')),
-          );
-          Navigator.pop(context);
-        }
-      });
-      connection.onreconnecting(({error}) {
-        if (mounted) setState(() => connected = false);
-      });
-      connection.onreconnected(({connectionId}) async {
+      connection.onMessage = _add;
+      connection.onAccessRevoked = () {
         if (!mounted) return;
-        try {
-          await connection.invoke('JoinGroup', args: [widget.group.id]);
-          await _refresh();
-          if (mounted) setState(() => connected = true);
-        } catch (e) {
-          if (mounted) {
-            setState(() => error = e is ApiException ? e.message : '$e');
-          }
-        }
-      });
-      connection.onclose(({error}) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bạn không còn quyền vào nhóm.')),
+        );
+        Navigator.pop(context);
+      };
+      connection.onDisconnected = () {
         if (mounted) setState(() => connected = false);
-      });
-      await connection.start();
-      await connection.invoke('JoinGroup', args: [widget.group.id]);
+      };
+      connection.onError = _showError;
+      connection.onReconnected = () async {
+        await _refresh();
+        if (mounted) {
+          setState(() {
+            connected = true;
+            error = null;
+          });
+        }
+      };
+      await connection.connect();
+      if (!mounted) return;
       await _refresh();
       if (mounted) setState(() => connected = true);
     } catch (e) {
-      if (mounted) setState(() => error = e is ApiException ? e.message : '$e');
+      _showError(e);
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() {
+          loading = false;
+          connecting = false;
+        });
+      }
+    }
+  }
+
+  void _showError(Object e) {
+    if (mounted) {
+      setState(
+        () =>
+            error =
+                e is ApiException
+                    ? e.message
+                    : 'Không thể kết nối hoặc gửi tin nhắn. Vui lòng thử lại.',
+      );
     }
   }
 
@@ -176,14 +174,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
     setState(() => sending = true);
     try {
-      final response = await hub!.invoke(
-        'SendMessage',
-        args: [widget.group.id, content],
-      );
-      if (response is Map) {
-        _add(ChatMessage.fromJson(Map<String, dynamic>.from(response)));
-      }
-      if (mounted) input.clear();
+      final response = await hub!.send(content);
+      if (response != null) _add(response);
+      // Keep anything the user typed while the previous message was sending.
+      if (mounted && input.text.trim() == content) input.clear();
     } catch (e) {
       if (mounted) setState(() => error = e is ApiException ? e.message : '$e');
     } finally {
@@ -197,9 +191,24 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     body: Column(
       children: [
         if (!connected)
-          const Padding(
-            padding: EdgeInsets.all(8),
-            child: Text('Đang kết nối phòng chat...'),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    connecting
+                        ? 'Đang kết nối phòng chat...'
+                        : 'Đã mất kết nối.',
+                  ),
+                ),
+                if (!connecting)
+                  TextButton(
+                    onPressed: _open,
+                    child: const Text('Kết nối lại'),
+                  ),
+              ],
+            ),
           ),
         if (error != null)
           MaterialBanner(
@@ -272,10 +281,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          Text(
-                                            message.senderName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                          Flexible(
+                                            child: Text(
+                                              message.senderName,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         ],

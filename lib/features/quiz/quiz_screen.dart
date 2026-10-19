@@ -31,6 +31,10 @@ class _QuizScreenState extends State<QuizScreen> {
   bool busy = false;
   bool submitting = false;
   bool autoSubmitted = false;
+  bool resumeBlocked = false;
+  bool loadingHistory = false;
+  bool confirming = false;
+  Future<void> draftWrites = Future.value();
   String? error;
   QuizAttempt? attempt;
   QuizResult? result;
@@ -54,6 +58,9 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       busy = true;
       error = null;
+      subjectId = null;
+      deck = null;
+      decks = [];
     });
     try {
       final values = await Future.wait([repo.subjects(), repo.history(1)]);
@@ -74,6 +81,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _resume() async {
+    resumeBlocked = false;
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(draftKey);
     if (raw == null) return;
@@ -93,25 +101,28 @@ class _QuizScreenState extends State<QuizScreen> {
         attempt = resumed;
         result = null;
         questionIndex = 0;
+        autoSubmitted = false;
       });
       _startTicker();
     } on ApiException catch (e) {
       if (e.code == 'attempt_not_found' || e.code == 'attempt_expired') {
         await prefs.remove(draftKey);
       } else if (mounted) {
-        setState(() => error = e.message);
+        setState(() {
+          resumeBlocked = true;
+          error = 'Chưa thể khôi phục bài đang làm. ${e.message}';
+        });
       }
     } catch (_) {
       await prefs.remove(draftKey);
     }
   }
 
-  Future<void> _saveDraft() async {
+  Future<void> _saveDraft() {
     final current = attempt;
-    if (current == null) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      draftKey,
+    if (current == null) return Future.value();
+    // Capture answers before awaiting storage; queue removal after every save.
+    return _writeDraft(
       jsonEncode({
         'attemptId': current.id,
         'deckId': current.deckId,
@@ -120,6 +131,20 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       }),
     );
+  }
+
+  Future<void> _writeDraft(String? value) {
+    final key = draftKey;
+    final write = draftWrites.then((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      if (value == null) {
+        await prefs.remove(key);
+      } else {
+        await prefs.setString(key, value);
+      }
+    });
+    draftWrites = write.catchError((Object _) {});
+    return write;
   }
 
   void _startTicker() {
@@ -158,7 +183,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _start() async {
-    if (deck == null) return;
+    if (deck == null || busy || resumeBlocked) return;
     setState(() {
       busy = true;
       error = null;
@@ -173,8 +198,8 @@ class _QuizScreenState extends State<QuizScreen> {
         result = null;
         questionIndex = 0;
       });
-      await _saveDraft();
       _startTicker();
+      await _saveDraft();
     } catch (e) {
       _showError(e);
     } finally {
@@ -184,16 +209,18 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Future<void> _submit() async {
     if (attempt == null || submitting) return;
+    if (confirming) Navigator.of(context).pop(false);
     setState(() => submitting = true);
     try {
       final finished = await repo.submit(attempt!, selected);
-      await (await SharedPreferences.getInstance()).remove(draftKey);
       ticker?.cancel();
       if (!mounted) return;
       setState(() {
         result = finished;
         attempt = null;
       });
+      // A storage failure must not hide a result already accepted by the server.
+      await _writeDraft(null).catchError(_showError);
       final page = await repo.history(1);
       if (mounted) {
         setState(() {
@@ -210,6 +237,8 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _confirmSubmit() async {
+    if (attempt == null || submitting || confirming) return;
+    confirming = true;
     final unanswered =
         attempt!.questions.where((q) => selected[q.id]?.isEmpty ?? true).length;
     final yes = await showDialog<bool>(
@@ -234,20 +263,26 @@ class _QuizScreenState extends State<QuizScreen> {
             ],
           ),
     );
-    if (yes == true) _submit();
+    confirming = false;
+    if (yes == true && mounted) _submit();
   }
 
   Future<void> _moreHistory() async {
+    if (loadingHistory) return;
+    setState(() => loadingHistory = true);
     try {
       final page = await repo.history(historyPage + 1);
       if (mounted) {
         setState(() {
           history.addAll(page.items);
           historyPage++;
+          historyTotal = page.totalCount;
         });
       }
     } catch (e) {
       _showError(e);
+    } finally {
+      if (mounted) setState(() => loadingHistory = false);
     }
   }
 
@@ -294,6 +329,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _entryView() => RefreshIndicator(
     onRefresh: _load,
     child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
         if (error != null)
@@ -301,12 +337,18 @@ class _QuizScreenState extends State<QuizScreen> {
             error!,
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
+        if (error != null)
+          TextButton(
+            onPressed: busy ? null : _load,
+            child: const Text('Thử lại'),
+          ),
         const Text(
           'Bắt đầu bài thi',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
+          isExpanded: true,
           initialValue: subjectId,
           decoration: const InputDecoration(labelText: 'Môn học'),
           items:
@@ -319,6 +361,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<int>(
+          isExpanded: true,
           key: ValueKey(subjectId),
           initialValue: deck?.id,
           decoration: const InputDecoration(labelText: 'Bộ đề'),
@@ -361,7 +404,11 @@ class _QuizScreenState extends State<QuizScreen> {
           const SizedBox(height: 12),
           FilledButton(
             onPressed:
-                busy || count < 1 || count > deck!.questionCount || count > 500
+                busy ||
+                        resumeBlocked ||
+                        count < 1 ||
+                        count > deck!.questionCount ||
+                        count > 500
                     ? null
                     : _start,
             child: const Text('Bắt đầu'),
@@ -389,7 +436,10 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
           ),
         if (history.length < historyTotal)
-          TextButton(onPressed: _moreHistory, child: const Text('Xem thêm')),
+          TextButton(
+            onPressed: loadingHistory ? null : _moreHistory,
+            child: const Text('Xem thêm'),
+          ),
       ],
     ),
   );
@@ -449,7 +499,8 @@ class _QuizScreenState extends State<QuizScreen> {
               title: Text('${String.fromCharCode(65 + i)}. ${answer.content}'),
               value: answers.contains(answer.id),
               onChanged:
-                  submitting
+                  submitting ||
+                          (quiz.expiresAt != null && left == Duration.zero)
                       ? null
                       : (checked) {
                         setState(() {
@@ -461,7 +512,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           }
                           selected[question.id] = answers;
                         });
-                        _saveDraft();
+                        unawaited(_saveDraft().catchError(_showError));
                       },
             ),
           ),

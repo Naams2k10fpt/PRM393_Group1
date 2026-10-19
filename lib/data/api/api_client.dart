@@ -38,6 +38,8 @@ class ApiClient {
 
   Future<dynamic> put(String path, {Object? data}) => _send(() => dio.put<dynamic>(path, data: data));
 
+  Future<dynamic> delete(String path) => _send(() => dio.delete<dynamic>(path));
+
   /// For SignalR `accessTokenFactory`: hubs take the same token as `?access_token=`.
   Future<String> accessToken() async => await tokens.read() ?? '';
 
