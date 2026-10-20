@@ -50,7 +50,7 @@ void main() {
     await tester.tap(find.text('Tạo'));
     await tester.pumpAndSettle();
     expect(find.text('Nhập tên nhóm.'), findsOneWidget);
-    expect(repo.calls, isEmpty);
+    expect(repo.calls.where((call) => call.startsWith('create:')), isEmpty);
     await tester.enterText(find.byType(TextFormField).first, 'Nhóm mới');
     await tester.tap(find.text('Tạo'));
     await tester.pumpAndSettle();

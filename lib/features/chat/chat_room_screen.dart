@@ -7,6 +7,7 @@ import '../../data/api/api_exception.dart';
 import '../../data/realtime/chat_connection.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../auth/auth_controller.dart';
+import 'group_details_screen.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   const ChatRoomScreen({super.key, required this.group});
@@ -25,10 +26,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool loading = true;
   bool loadingOlder = false;
   bool hasOlder = true;
-  bool connected = false;
+  final connected = ValueNotifier<bool>(false);
   bool connecting = false;
   bool sending = false;
   String? error;
+  final roster = ValueNotifier<List<GroupMember>>([]);
+  final online = ValueNotifier<Set<String>>({});
+  final website = ValueNotifier<Set<String>>({});
 
   @override
   void initState() {
@@ -41,6 +45,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     unawaited(hub?.close().catchError((Object _) {}));
     input.dispose();
     scroll.dispose();
+    roster.dispose();
+    online.dispose();
+    website.dispose();
+    connected.dispose();
     super.dispose();
   }
 
@@ -48,7 +56,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (connecting) return;
     setState(() {
       connecting = true;
-      connected = false;
+      connected.value = false;
       error = null;
     });
     final previous = hub;
@@ -63,17 +71,33 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bạn không còn quyền vào nhóm.')),
         );
-        Navigator.pop(context);
+        final room = ModalRoute.of(context);
+        final navigator = Navigator.of(context);
+        navigator.popUntil((route) => route == room);
+        navigator.pop();
+      };
+      connection.onRoster = (members) {
+        if (mounted) roster.value = members;
+      };
+      connection.onPresence = (ids) {
+        if (mounted) online.value = ids;
+      };
+      connection.onWebsitePresence = (ids) {
+        if (mounted) website.value = ids;
       };
       connection.onDisconnected = () {
-        if (mounted) setState(() => connected = false);
+        if (mounted) {
+          online.value = {};
+          website.value = {};
+          setState(() => connected.value = false);
+        }
       };
       connection.onError = _showError;
       connection.onReconnected = () async {
         await _refresh();
         if (mounted) {
           setState(() {
-            connected = true;
+            connected.value = true;
             error = null;
           });
         }
@@ -81,7 +105,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       await connection.connect();
       if (!mounted) return;
       await _refresh();
-      if (mounted) setState(() => connected = true);
+      if (mounted) setState(() => connected.value = true);
     } catch (e) {
       _showError(e);
     } finally {
@@ -169,7 +193,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   Future<void> _send() async {
     final content = input.text.trim();
-    if (content.isEmpty || content.length > 2000 || sending || !connected) {
+    if (content.isEmpty ||
+        content.length > 2000 ||
+        sending ||
+        !connected.value) {
       return;
     }
     setState(() => sending = true);
@@ -185,12 +212,95 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
   }
 
+  Future<void> _details() async {
+    final left = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GroupDetailsScreen(groupId: widget.group.id),
+      ),
+    );
+    if (mounted && left == true) Navigator.pop(context);
+  }
+
+  void _members() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder:
+          (context) => SafeArea(
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height * .65,
+              child: ListenableBuilder(
+                listenable: Listenable.merge([
+                  roster,
+                  online,
+                  website,
+                  connected,
+                ]),
+                builder:
+                    (context, _) => ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        Text(
+                          'Thành viên (${roster.value.length})',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        Text(
+                          connected.value
+                              ? '${roster.value.where((m) => online.value.contains(m.userId)).length} đang trong phòng chat'
+                              : 'Đang mất kết nối · trạng thái chưa cập nhật',
+                        ),
+                        for (final member in roster.value)
+                          ListTile(
+                            title: Text(
+                              '${member.username}${member.userId == userId ? ' (bạn)' : ''}',
+                            ),
+                            subtitle: Text(
+                              '${member.roleLabel} · ${online.value.contains(member.userId)
+                                  ? 'Online'
+                                  : website.value.contains(member.userId)
+                                  ? 'Chờ trên web'
+                                  : 'Ngoại tuyến'}',
+                            ),
+                            leading: Icon(
+                              Icons.circle,
+                              size: 14,
+                              color:
+                                  online.value.contains(member.userId)
+                                      ? Colors.greenAccent
+                                      : website.value.contains(member.userId)
+                                      ? Colors.amber
+                                      : Colors.grey,
+                            ),
+                          ),
+                      ],
+                    ),
+              ),
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.group.name)),
+    appBar: AppBar(
+      title: Text(widget.group.name, overflow: TextOverflow.ellipsis),
+      actions: [
+        IconButton(
+          tooltip: 'Thành viên',
+          onPressed: _members,
+          icon: const Icon(Icons.people_outline),
+        ),
+        IconButton(
+          tooltip: 'Thông tin và quản lý nhóm',
+          onPressed: _details,
+          icon: const Icon(Icons.settings_outlined),
+        ),
+      ],
+    ),
     body: Column(
       children: [
-        if (!connected)
+        if (!connected.value)
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
@@ -336,7 +446,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 ),
                 IconButton(
                   tooltip: 'Gửi',
-                  onPressed: connected && !sending ? _send : null,
+                  onPressed: connected.value && !sending ? _send : null,
                   icon: const Icon(Icons.send),
                 ),
               ],

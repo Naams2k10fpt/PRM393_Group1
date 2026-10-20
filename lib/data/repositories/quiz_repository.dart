@@ -6,12 +6,23 @@ class QuizRepository {
   final ApiClient api;
 
   Future<List<QuizSubject>> subjects() async {
-    final data =
-        await api.get('/api/subjects', query: {'pageSize': 100})
-            as Map<String, dynamic>;
-    return (data['items'] as List)
-        .map((e) => QuizSubject.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final subjects = <QuizSubject>[];
+    var page = 1;
+    while (true) {
+      final data =
+          await api.get('/api/subjects', query: {'pageSize': 100, 'page': page})
+              as Map<String, dynamic>;
+      final items =
+          (data['items'] as List)
+              .map((e) => QuizSubject.fromJson(e as Map<String, dynamic>))
+              .toList();
+      subjects.addAll(items);
+      if (items.isEmpty || subjects.length >= (data['totalCount'] as int)) {
+        break;
+      }
+      page++;
+    }
+    return subjects;
   }
 
   Future<List<QuizDeck>> decks(int subjectId) async =>
@@ -69,6 +80,23 @@ class QuizRepository {
   Future<QuizResult> result(int id) async => QuizResult.fromJson(
     await api.get('/api/history/$id') as Map<String, dynamic>,
   );
+
+  Future<void> report(
+    int historyId,
+    int questionId,
+    String reason,
+    String note,
+  ) async {
+    await api.post(
+      '/api/quiz/reports',
+      data: {
+        'testHistoryId': historyId,
+        'questionId': questionId,
+        'reason': reason,
+        'note': note.trim(),
+      },
+    );
+  }
 }
 
 class QuizSubject {
@@ -161,7 +189,10 @@ class QuizHistoryItem {
 
 class QuizResult {
   QuizResult.fromJson(Map<String, dynamic> json)
-    : deckName = json['deckName'] as String,
+    : historyId = json['testHistoryId'] as int? ?? 0,
+      deckId = json['deckId'] as int? ?? 0,
+      createdAt = DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      deckName = json['deckName'] as String,
       subjectName = json['subjectName'] as String,
       score = (json['score'] as num).toDouble(),
       percentage = (json['percentage'] as num).toDouble(),
@@ -174,6 +205,8 @@ class QuizResult {
               )
               .toList();
   final String deckName;
+  final int historyId, deckId;
+  final DateTime? createdAt;
   final String subjectName;
   final double score;
   final double percentage;
@@ -184,7 +217,9 @@ class QuizResult {
 
 class QuizResultQuestion {
   QuizResultQuestion.fromJson(Map<String, dynamic> json)
-    : content = json['content'] as String,
+    : id = json['questionId'] as int? ?? 0,
+      multiple = json['questionType'] == 2,
+      content = json['content'] as String,
       explanation = json['explanation'] as String?,
       isCorrect = json['isCorrect'] as bool,
       answers =
@@ -192,6 +227,8 @@ class QuizResultQuestion {
               .map((e) => QuizResultAnswer.fromJson(e as Map<String, dynamic>))
               .toList();
   final String content;
+  final int id;
+  final bool multiple;
   final String? explanation;
   final bool isCorrect;
   final List<QuizResultAnswer> answers;

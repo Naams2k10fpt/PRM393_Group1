@@ -8,9 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/repositories/quiz_repository.dart';
 import '../../data/api/api_exception.dart';
 import '../auth/auth_controller.dart';
+import 'quiz_content.dart';
+import 'report_question_dialog.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  const QuizScreen({super.key, this.initialSubjectId, this.initialDeckId});
+  final int? initialSubjectId, initialDeckId;
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -34,6 +37,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool resumeBlocked = false;
   bool loadingHistory = false;
   bool confirming = false;
+  bool openingResult = false;
   Future<void> draftWrites = Future.value();
   String? error;
   QuizAttempt? attempt;
@@ -73,6 +77,18 @@ class _QuizScreenState extends State<QuizScreen> {
         historyPage = 1;
       });
       await _resume();
+      if (mounted &&
+          attempt == null &&
+          !resumeBlocked &&
+          widget.initialSubjectId != null) {
+        await _selectSubject(widget.initialSubjectId);
+        if (mounted) {
+          setState(() {
+            deck = decks.where((d) => d.id == widget.initialDeckId).firstOrNull;
+            if (deck != null) count = deck!.questionCount.clamp(1, 10);
+          });
+        }
+      }
     } catch (e) {
       if (mounted) setState(() => error = e is ApiException ? e.message : '$e');
     } finally {
@@ -184,12 +200,17 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Future<void> _start() async {
     if (deck == null || busy || resumeBlocked) return;
+    await _begin(deck!.id, count);
+  }
+
+  Future<void> _begin(int deckId, int questionCount) async {
+    if (busy || resumeBlocked) return;
     setState(() {
       busy = true;
       error = null;
     });
     try {
-      final started = await repo.start(deck!.id, count);
+      final started = await repo.start(deckId, questionCount);
       if (!mounted) return;
       selected.clear();
       autoSubmitted = false;
@@ -287,11 +308,34 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _openResult(int id) async {
+    if (openingResult) return;
+    setState(() => openingResult = true);
     try {
       final loaded = await repo.result(id);
       if (mounted) setState(() => result = loaded);
     } catch (e) {
       _showError(e);
+    } finally {
+      if (mounted) setState(() => openingResult = false);
+    }
+  }
+
+  Future<void> _report(QuizResult data, QuizResultQuestion question) async {
+    final sent = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => ReportQuestionDialog(
+            repo: repo,
+            historyId: data.historyId,
+            questionId: question.id,
+          ),
+    );
+    if (sent == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gửi báo cáo. Cảm ơn bạn đã đóng góp!'),
+        ),
+      );
     }
   }
 
@@ -307,6 +351,10 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading:
+            result != null
+                ? BackButton(onPressed: () => setState(() => result = null))
+                : null,
         title: Text(
           result != null
               ? 'Kết quả'
@@ -415,6 +463,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ],
         const SizedBox(height: 32),
+        if (openingResult) const LinearProgressIndicator(),
         const Text(
           'Lịch sử làm bài',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -432,7 +481,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 '${item.subjectName} · ${item.createdAt.toLocal().day}/${item.createdAt.toLocal().month}/${item.createdAt.toLocal().year}',
               ),
               trailing: Text('${item.percentage.toStringAsFixed(0)}%'),
-              onTap: () => _openResult(item.id),
+              onTap: openingResult ? null : () => _openResult(item.id),
             ),
           ),
         if (history.length < historyTotal)
@@ -487,7 +536,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ],
         ),
         const SizedBox(height: 20),
-        Text(
+        QuizContent(
           'Câu ${questionIndex + 1}/${quiz.questions.length}: ${question.content}',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
@@ -496,7 +545,9 @@ class _QuizScreenState extends State<QuizScreen> {
         for (final (i, answer) in question.answers.indexed)
           Card(
             child: CheckboxListTile(
-              title: Text('${String.fromCharCode(65 + i)}. ${answer.content}'),
+              title: QuizContent(
+                '${String.fromCharCode(65 + i)}. ${answer.content}',
+              ),
               value: answers.contains(answer.id),
               onChanged:
                   submitting ||
@@ -561,11 +612,23 @@ class _QuizScreenState extends State<QuizScreen> {
         Text(
           '${data.subjectName} · ${data.score.toStringAsFixed(1)}/10 điểm · ${data.correctCount}/${data.totalCount} câu đúng · ${data.percentage.toStringAsFixed(0)}%',
         ),
+        Text(
+          data.percentage >= 50 ? 'Đạt' : 'Không đạt',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        if (data.createdAt != null)
+          Text('Làm bài lúc: ${data.createdAt!.toLocal()}'),
         const SizedBox(height: 16),
         FilledButton(
           onPressed: () => setState(() => result = null),
           child: const Text('Về danh sách'),
         ),
+        if (data.deckId > 0)
+          OutlinedButton.icon(
+            onPressed: busy ? null : () => _begin(data.deckId, data.totalCount),
+            icon: const Icon(Icons.replay),
+            label: Text(busy ? 'Đang tải...' : 'Làm lại bài quiz'),
+          ),
         for (var i = 0; i < data.questions.length; i++)
           Card(
             child: Padding(
@@ -573,10 +636,11 @@ class _QuizScreenState extends State<QuizScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  QuizContent(
                     'Câu ${i + 1}: ${data.questions[i].content}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
+                  if (data.questions[i].multiple) const Text('Nhiều đáp án'),
                   Text(
                     data.questions[i].isCorrect ? 'Đúng' : 'Sai',
                     style: TextStyle(
@@ -605,14 +669,23 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
+                          child: QuizContent(
                             '${answer.content}${answer.wasSelected ? ' (đã chọn)' : ''}',
                           ),
                         ),
                       ],
                     ),
                   if (data.questions[i].explanation?.isNotEmpty == true)
-                    Text('Giải thích: ${data.questions[i].explanation}'),
+                    QuizContent('Giải thích: ${data.questions[i].explanation}'),
+                  if (data.historyId > 0 && data.questions[i].id > 0)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => _report(data, data.questions[i]),
+                        icon: const Icon(Icons.flag_outlined),
+                        label: const Text('Báo cáo câu hỏi'),
+                      ),
+                    ),
                 ],
               ),
             ),

@@ -27,6 +27,9 @@ QuizAttempt quizAttempt({DateTime? expiresAt}) => QuizAttempt.fromJson({
 });
 
 QuizResult quizResult() => QuizResult.fromJson({
+  'testHistoryId': 1,
+  'deckId': 7,
+  'createdAt': '2026-10-19T01:00:00Z',
   'deckName': 'Ôn tập TV3',
   'subjectName': 'Môn TV3',
   'score': 5,
@@ -35,6 +38,7 @@ QuizResult quizResult() => QuizResult.fromJson({
   'totalCount': 2,
   'questions': [
     {
+      'questionId': 21,
       'content': 'Nội dung 21',
       'explanation': 'Giải thích mẫu',
       'isCorrect': true,
@@ -44,6 +48,7 @@ QuizResult quizResult() => QuizResult.fromJson({
       ],
     },
     {
+      'questionId': 22,
       'content': 'Nội dung 22',
       'explanation': null,
       'isCorrect': false,
@@ -61,6 +66,7 @@ class FakeQuizRepository extends QuizRepository {
   QuizAttempt current = quizAttempt();
   ApiException? resumeError;
   ApiException? submitError;
+  ApiException? reportError;
   Completer<QuizResult>? pendingSubmit;
   final submissions = <Map<int, Set<int>>>[];
   final calls = <String>[];
@@ -127,6 +133,17 @@ class FakeQuizRepository extends QuizRepository {
   Future<QuizResult> result(int id) async {
     calls.add('result:$id');
     return quizResult();
+  }
+
+  @override
+  Future<void> report(
+    int historyId,
+    int questionId,
+    String reason,
+    String note,
+  ) async {
+    if (reportError != null) throw reportError!;
+    calls.add('report:$historyId:$questionId:$reason:$note');
   }
 }
 
@@ -219,8 +236,163 @@ class FakeGroupsRepository extends GroupsRepository {
   ];
 
   @override
-  Future<void> create(String name, String description, int accessMode) async {
-    calls.add('create:$name:$description:$accessMode');
+  Future<void> create(
+    String name,
+    String description,
+    int accessMode, {
+    int? subjectId,
+  }) async {
+    calls.add('create:${name.trim()}:${description.trim()}:$accessMode');
+    if (subjectId != null) calls.add('subject:$subjectId');
+  }
+
+  int role = 2;
+  int mode = 1;
+  final memberRoles = <String, int>{'u1': 2, 'u2': 0};
+  bool invited = false;
+  @override
+  Future<GroupOptions> options() async => GroupOptions.fromJson({
+    'publicSubjects': [
+      {'id': 1, 'name': 'Môn TV3'},
+    ],
+    'mySubjects': [
+      {'id': 1, 'name': 'Môn TV3'},
+    ],
+  });
+  @override
+  Future<GroupDiscovery> discovery({
+    String search = '',
+    int? accessMode,
+    int? subjectId,
+    String sort = 'newest',
+    int page = 1,
+  }) async {
+    calls.add('search:$search:$accessMode:$subjectId:$sort:$page');
+    return GroupDiscovery.fromJson({
+      'groups': [
+        {
+          'id': 2,
+          'name': 'Nhóm cần duyệt',
+          'description': null,
+          'subjectName': 'Môn TV3',
+          'unreadCount': 0,
+          'memberCount': 2,
+          'isMember': false,
+          'hasPendingRequest': pending,
+          'accessMode': 1,
+        },
+      ],
+      'totalCount': 1,
+      'page': 1,
+      'pageCount': 1,
+    });
+  }
+
+  @override
+  Future<List<GroupInvitation>> invitations() async =>
+      invited
+          ? [
+            GroupInvitation.fromJson({
+              'groupId': 3,
+              'groupName': 'Nhóm mời riêng',
+              'expiresAt': '2026-12-01T00:00:00Z',
+            }),
+          ]
+          : [];
+  @override
+  Future<void> respondInvitation(int id, bool accept) async {
+    calls.add('invitation:$id:$accept');
+    invited = false;
+  }
+
+  @override
+  Future<GroupDetails> details(int id) async => GroupDetails.fromJson({
+    'id': id,
+    'name': 'Nhóm TV3',
+    'description': 'Ôn tập cùng nhau',
+    'accessMode': mode,
+    'myRole': role,
+    'members': [
+      for (final entry in memberRoles.entries)
+        {
+          'userId': entry.key,
+          'username': entry.key == 'u1' ? 'Tôi' : 'Bạn học',
+          'role': entry.key == 'u1' ? role : entry.value,
+        },
+    ],
+  });
+  @override
+  Future<GroupManagement> management(int id) async => GroupManagement.fromJson({
+    'requests': [
+      {'userId': 'u3', 'username': 'Người đang chờ'},
+    ],
+    'banned': [
+      {'userId': 'u4', 'username': 'Người bị chặn'},
+    ],
+    'inviteLinks': [],
+  });
+  @override
+  Future<void> invite(int id, String email) async {
+    calls.add('invite:$id:$email');
+  }
+
+  @override
+  Future<void> review(int id, String userId, bool accept) async {
+    calls.add('review:$id:$userId:$accept');
+  }
+
+  @override
+  Future<void> changeAccess(int id, int mode) async {
+    calls.add('access:$id:$mode');
+    this.mode = mode;
+  }
+
+  @override
+  Future<void> setModerator(int id, String userId, bool moderator) async {
+    calls.add('moderator:$id:$userId:$moderator');
+    memberRoles[userId] = moderator ? 1 : 0;
+  }
+
+  @override
+  Future<void> transfer(int id, String userId) async {
+    calls.add('transfer:$id:$userId');
+    role = 0;
+    memberRoles[userId] = 2;
+  }
+
+  @override
+  Future<void> removeMember(int id, String userId) async {
+    calls.add('remove:$id:$userId');
+    memberRoles.remove(userId);
+  }
+
+  @override
+  Future<void> unban(int id, String userId) async {
+    calls.add('unban:$id:$userId');
+  }
+
+  @override
+  Future<void> leave(int id) async {
+    calls.add('leave:$id');
+  }
+
+  @override
+  Future<void> createLink(int id, int days) async {
+    calls.add('link:$id:$days');
+  }
+
+  @override
+  Future<void> revokeLink(int id, int linkId) async {
+    calls.add('revoke:$id:$linkId');
+  }
+
+  @override
+  Future<GroupInvitePreview> previewLink(String token) async =>
+      GroupInvitePreview.fromJson({'groupId': 1, 'groupName': 'Nhóm TV3'});
+  @override
+  Future<int> acceptLink(String token) async {
+    calls.add('accept-link:$token');
+    return 1;
   }
 
   @override

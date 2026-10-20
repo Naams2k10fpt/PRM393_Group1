@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/groups_repository.dart';
 import 'chat_room_screen.dart';
-
-typedef _GroupDraft = ({String name, String description, int mode});
+import 'join_invite_dialog.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -13,91 +11,18 @@ class GroupsScreen extends StatefulWidget {
   State<GroupsScreen> createState() => _GroupsScreenState();
 }
 
-class _CreateGroupDialog extends StatefulWidget {
-  const _CreateGroupDialog();
-
-  @override
-  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
-}
-
-class _CreateGroupDialogState extends State<_CreateGroupDialog> {
-  final formKey = GlobalKey<FormState>();
-  final name = TextEditingController();
-  final description = TextEditingController();
-  int mode = 0;
-
-  @override
-  void dispose() {
-    name.dispose();
-    description.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Tạo nhóm học'),
-    content: SingleChildScrollView(
-      child: Form(
-        key: formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: name,
-              maxLength: 100,
-              decoration: const InputDecoration(labelText: 'Tên nhóm'),
-              validator:
-                  (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'Nhập tên nhóm.'
-                          : null,
-            ),
-            TextFormField(
-              controller: description,
-              maxLength: 500,
-              decoration: const InputDecoration(labelText: 'Mô tả'),
-            ),
-            DropdownButtonFormField<int>(
-              initialValue: mode,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Quyền tham gia'),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('Tham gia tự do')),
-                DropdownMenuItem(value: 1, child: Text('Cần phê duyệt')),
-              ],
-              onChanged: (value) => setState(() => mode = value ?? 0),
-            ),
-          ],
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Hủy'),
-      ),
-      FilledButton(
-        onPressed: () {
-          if (formKey.currentState!.validate()) {
-            Navigator.pop(context, (
-              name: name.text.trim(),
-              description: description.text.trim(),
-              mode: mode,
-            ));
-          }
-        },
-        child: const Text('Tạo'),
-      ),
-    ],
-  );
-}
-
 class _GroupsScreenState extends State<GroupsScreen> {
-  late final GroupsRepository repo = context.read<GroupsRepository>();
+  late final repo = context.read<GroupsRepository>();
+  final search = TextEditingController();
   List<StudyGroup> mine = [];
-  List<StudyGroup> discover = [];
-  bool loading = true;
-  final pendingActions = <int>{};
+  List<GroupInvitation> invitations = [];
+  GroupOptions? options;
+  GroupDiscovery? discovery;
+  int? accessMode, subjectId;
+  String sort = 'newest';
+  bool loading = true, searching = false;
+  int searchVersion = 0;
+  final pending = <int>{};
   String? error;
 
   @override
@@ -106,86 +31,123 @@ class _GroupsScreenState extends State<GroupsScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    if (!mounted) return;
     setState(() {
       loading = true;
       error = null;
     });
     try {
-      final groups = await Future.wait([repo.mine(), repo.discover()]);
-      if (mounted) {
-        setState(() {
-          mine = groups[0];
-          discover = groups[1];
-        });
-      }
+      final values = await Future.wait<Object>([
+        repo.mine(),
+        repo.options(),
+        repo.invitations(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        mine = values[0] as List<StudyGroup>;
+        options = values[1] as GroupOptions;
+        invitations = values[2] as List<GroupInvitation>;
+      });
+      await _find(page: discovery?.page ?? 1);
     } catch (e) {
-      if (mounted) setState(() => error = e is ApiException ? e.message : '$e');
+      if (mounted) setState(() => error = _message(e));
     } finally {
       if (mounted) setState(() => loading = false);
     }
   }
 
-  Future<void> _create() async {
-    final request = await showDialog<_GroupDraft>(
-      context: context,
-      builder: (_) => const _CreateGroupDialog(),
-    );
-    if (request == null || !mounted) return;
+  Future<void> _find({int page = 1}) async {
+    final version = ++searchVersion;
+    setState(() {
+      searching = true;
+      error = null;
+    });
     try {
-      await repo.create(request.name, request.description, request.mode);
-      await _load();
+      final data = await repo.discovery(
+        search: search.text.trim(),
+        accessMode: accessMode,
+        subjectId: subjectId,
+        sort: sort,
+        page: page,
+      );
+      if (mounted && version == searchVersion) setState(() => discovery = data);
     } catch (e) {
-      _showError(e);
+      if (mounted && version == searchVersion) {
+        setState(() => error = _message(e));
+      }
+    } finally {
+      if (mounted && version == searchVersion) {
+        setState(() => searching = false);
+      }
     }
   }
 
-  Future<void> _join(StudyGroup group) async {
-    if (!pendingActions.add(group.id)) return;
+  String _message(Object e) =>
+      e is ApiException ? e.message : 'Không thể tải nhóm. Vui lòng thử lại.';
+
+  Future<void> _action(
+    int id,
+    Future<void> Function() action, {
+    String? success,
+  }) async {
+    if (!pending.add(id)) return;
     setState(() {});
     try {
-      await repo.join(group.id);
+      await action();
+      if (!mounted) return;
       await _load();
-      if (mounted && group.accessMode == 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã gửi yêu cầu tham gia.')),
-        );
+      if (mounted && success != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(success)));
       }
     } catch (e) {
-      _showError(e);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_message(e))));
+      }
     } finally {
-      if (mounted) setState(() => pendingActions.remove(group.id));
+      if (mounted) setState(() => pending.remove(id));
     }
   }
 
-  Future<void> _cancelRequest(StudyGroup group) async {
-    if (!pendingActions.add(group.id)) return;
-    setState(() {});
-    try {
-      await repo.cancelJoinRequest(group.id);
-      await _load();
-    } catch (e) {
-      _showError(e);
-    } finally {
-      if (mounted) setState(() => pendingActions.remove(group.id));
-    }
+  Future<void> _open(StudyGroup group) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (_) => ChatRoomScreen(group: group)),
+    );
+    if (mounted) await _load();
   }
 
-  void _showError(Object e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e is ApiException
-                ? e.message
-                : e is FormatException
-                ? e.message
-                : '$e',
+  Future<void> _joinLink() async {
+    final id = await showDialog<int>(
+      context: context,
+      builder: (_) => JoinInviteDialog(repo: repo),
+    );
+    if (id == null || !mounted) return;
+    await _load();
+    if (!mounted) return;
+    final group = mine.where((g) => g.id == id).firstOrNull;
+    if (group != null) await _open(group);
+  }
+
+  Future<void> _create() async {
+    final created = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => _CreateGroupDialog(
+            repo: repo,
+            subjects: options?.mySubjects ?? [],
           ),
-        ),
-      );
-    }
+    );
+    if (created == true && mounted) await _load();
   }
 
   @override
@@ -194,8 +156,13 @@ class _GroupsScreenState extends State<GroupsScreen> {
       title: const Text('Nhóm học'),
       actions: [
         IconButton(
+          tooltip: 'Tham gia bằng link mời',
+          onPressed: _joinLink,
+          icon: const Icon(Icons.link),
+        ),
+        IconButton(
           tooltip: 'Tạo nhóm',
-          onPressed: _create,
+          onPressed: loading ? null : _create,
           icon: const Icon(Icons.add),
         ),
       ],
@@ -209,17 +176,70 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 children: [
-                  if (error != null)
+                  if (error != null) ...[
                     Text(
                       error!,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-                  const Text(
-                    'Nhóm của tôi',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                    TextButton(onPressed: _load, child: const Text('Thử lại')),
+                  ],
+                  if (invitations.isNotEmpty) ...[
+                    _heading('Lời mời tham gia'),
+                    for (final invitation in invitations)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                invitation.groupName,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(
+                                'Hết hạn: ${invitation.expiresAt.toLocal().day}/${invitation.expiresAt.toLocal().month}/${invitation.expiresAt.toLocal().year}',
+                              ),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  TextButton(
+                                    onPressed:
+                                        pending.contains(invitation.groupId)
+                                            ? null
+                                            : () => _action(
+                                              invitation.groupId,
+                                              () => repo.respondInvitation(
+                                                invitation.groupId,
+                                                false,
+                                              ),
+                                            ),
+                                    child: const Text('Từ chối'),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        pending.contains(invitation.groupId)
+                                            ? null
+                                            : () => _action(
+                                              invitation.groupId,
+                                              () => repo.respondInvitation(
+                                                invitation.groupId,
+                                                true,
+                                              ),
+                                              success: 'Đã tham gia nhóm.',
+                                            ),
+                                    child: const Text('Chấp nhận'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                  ],
+                  _heading('Nhóm của tôi'),
                   if (mine.isEmpty)
                     const Padding(
                       padding: EdgeInsets.all(16),
@@ -228,7 +248,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   for (final group in mine)
                     Card(
                       child: ListTile(
-                        leading: const Icon(Icons.forum_outlined),
+                        leading: Icon(
+                          group.accessMode == 2
+                              ? Icons.lock_outline
+                              : Icons.forum_outlined,
+                        ),
                         title: Text(group.name),
                         subtitle: Text(
                           '${group.subjectName ?? 'Chung'} · ${group.memberCount} thành viên${group.description?.isNotEmpty == true ? ' · ${group.description}' : ''}',
@@ -240,49 +264,309 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                   child: const Icon(Icons.chevron_right),
                                 )
                                 : const Icon(Icons.chevron_right),
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatRoomScreen(group: group),
-                            ),
-                          );
-                          if (mounted) _load();
-                        },
+                        onTap: () => _open(group),
                       ),
                     ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Khám phá nhóm',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  for (final group in discover.where((g) => !g.isMember))
-                    Card(
-                      child: ListTile(
-                        title: Text(group.name),
-                        subtitle: Text(
-                          '${group.subjectName ?? 'Chung'} · ${group.memberCount} thành viên · ${group.accessMode == 1 ? 'Cần phê duyệt' : 'Công khai'}',
-                        ),
-                        trailing:
-                            group.hasPendingRequest
-                                ? TextButton(
-                                  onPressed:
-                                      pendingActions.contains(group.id)
-                                          ? null
-                                          : () => _cancelRequest(group),
-                                  child: const Text('Hủy yêu cầu'),
-                                )
-                                : TextButton(
-                                  onPressed:
-                                      pendingActions.contains(group.id)
-                                          ? null
-                                          : () => _join(group),
-                                  child: const Text('Tham gia'),
-                                ),
+                  _heading('Khám phá nhóm'),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: search,
+                    decoration: InputDecoration(
+                      labelText: 'Tìm nhóm',
+                      hintText: 'Tên hoặc mô tả',
+                      suffixIcon: IconButton(
+                        tooltip: 'Tìm kiếm',
+                        onPressed: () => _find(),
+                        icon: const Icon(Icons.search),
                       ),
+                    ),
+                    onSubmitted: (_) => _find(),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    initialValue: accessMode ?? -1,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Quyền tham gia',
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: -1,
+                        child: Text('Tất cả nhóm công khai'),
+                      ),
+                      DropdownMenuItem(value: 0, child: Text('Tham gia tự do')),
+                      DropdownMenuItem(value: 1, child: Text('Cần phê duyệt')),
+                    ],
+                    onChanged: (value) {
+                      setState(() => accessMode = value == -1 ? null : value);
+                      _find();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    initialValue: subjectId ?? -1,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Môn học'),
+                    items: [
+                      const DropdownMenuItem(
+                        value: -1,
+                        child: Text('Tất cả môn học'),
+                      ),
+                      for (final subject
+                          in options?.publicSubjects ?? <GroupSubject>[])
+                        DropdownMenuItem(
+                          value: subject.id,
+                          child: Text(subject.name),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      setState(() => subjectId = value == -1 ? null : value);
+                      _find();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: sort,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Sắp xếp'),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'newest',
+                        child: Text('Mới nhất'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'popular',
+                        child: Text('Nhiều thành viên nhất'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() => sort = value ?? 'newest');
+                      _find();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  if (searching) const LinearProgressIndicator(),
+                  if (!searching && discovery != null)
+                    Text('${discovery!.totalCount} nhóm phù hợp'),
+                  for (final group in discovery?.groups ?? <StudyGroup>[])
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              group.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              '${group.subjectName ?? 'Chung'} · ${group.memberCount} thành viên · ${groupAccessLabel(group.accessMode)}',
+                            ),
+                            if (group.ownerName != null)
+                              Text('Chủ phòng: ${group.ownerName}'),
+                            if (group.description?.isNotEmpty == true)
+                              Text(group.description!),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed:
+                                    pending.contains(group.id) || searching
+                                        ? null
+                                        : () => _action(
+                                          group.id,
+                                          () =>
+                                              group.hasPendingRequest
+                                                  ? repo.cancelJoinRequest(
+                                                    group.id,
+                                                  )
+                                                  : repo.join(group.id),
+                                          success:
+                                              !group.hasPendingRequest &&
+                                                      group.accessMode == 1
+                                                  ? 'Đã gửi yêu cầu tham gia.'
+                                                  : null,
+                                        ),
+                                child: Text(
+                                  group.hasPendingRequest
+                                      ? 'Hủy yêu cầu'
+                                      : 'Tham gia',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (!searching && discovery?.groups.isEmpty == true)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('Không tìm thấy nhóm phù hợp.'),
+                    ),
+                  if (discovery != null && discovery!.pageCount > 1)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed:
+                              searching || discovery!.page <= 1
+                                  ? null
+                                  : () => _find(page: discovery!.page - 1),
+                          child: const Text('Trước'),
+                        ),
+                        Text('${discovery!.page}/${discovery!.pageCount}'),
+                        TextButton(
+                          onPressed:
+                              searching ||
+                                      discovery!.page >= discovery!.pageCount
+                                  ? null
+                                  : () => _find(page: discovery!.page + 1),
+                          child: const Text('Tiếp'),
+                        ),
+                      ],
                     ),
                 ],
               ),
             ),
+  );
+
+  Widget _heading(String text) => Text(
+    text,
+    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  );
+}
+
+class _CreateGroupDialog extends StatefulWidget {
+  const _CreateGroupDialog({required this.repo, required this.subjects});
+  final GroupsRepository repo;
+  final List<GroupSubject> subjects;
+  @override
+  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
+}
+
+class _CreateGroupDialogState extends State<_CreateGroupDialog> {
+  final formKey = GlobalKey<FormState>();
+  final name = TextEditingController(), description = TextEditingController();
+  int mode = 0;
+  int? subjectId;
+  bool busy = false;
+  String? error;
+  @override
+  void dispose() {
+    name.dispose();
+    description.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (busy || !formKey.currentState!.validate()) return;
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      await widget.repo.create(
+        name.text,
+        description.text,
+        mode,
+        subjectId: subjectId,
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () =>
+              error =
+                  e is ApiException
+                      ? e.message
+                      : 'Không thể tạo nhóm. Vui lòng thử lại.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+    canPop: !busy,
+    child: AlertDialog(
+      title: const Text('Tạo nhóm học'),
+      content: SingleChildScrollView(
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (error != null)
+                Text(
+                  error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              TextFormField(
+                controller: name,
+                maxLength: 200,
+                enabled: !busy,
+                decoration: const InputDecoration(labelText: 'Tên nhóm'),
+                validator:
+                    (v) =>
+                        v == null || v.trim().isEmpty ? 'Nhập tên nhóm.' : null,
+              ),
+              TextFormField(
+                controller: description,
+                maxLength: 500,
+                enabled: !busy,
+                decoration: const InputDecoration(labelText: 'Mô tả'),
+              ),
+              DropdownButtonFormField<int>(
+                initialValue: -1,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Môn học của bạn'),
+                items: [
+                  const DropdownMenuItem(
+                    value: -1,
+                    child: Text('Nhóm học chung'),
+                  ),
+                  for (final subject in widget.subjects)
+                    DropdownMenuItem(
+                      value: subject.id,
+                      child: Text(subject.name),
+                    ),
+                ],
+                onChanged:
+                    busy
+                        ? null
+                        : (v) => setState(() => subjectId = v == -1 ? null : v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: mode,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Quyền tham gia'),
+                items: const [
+                  DropdownMenuItem(value: 0, child: Text('Tham gia tự do')),
+                  DropdownMenuItem(value: 1, child: Text('Cần phê duyệt')),
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text('Riêng tư · chỉ được mời'),
+                  ),
+                ],
+                onChanged: busy ? null : (v) => setState(() => mode = v ?? 0),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: busy ? null : () => Navigator.pop(context),
+          child: const Text('Hủy'),
+        ),
+        FilledButton(
+          onPressed: busy ? null : _save,
+          child: Text(busy ? 'Đang tạo...' : 'Tạo'),
+        ),
+      ],
+    ),
   );
 }

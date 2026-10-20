@@ -11,11 +11,14 @@ The backend contract is documented in [PRN232 TV3 API](https://github.com/Naams2
 - Drafts are stored per user and resumed using the server attempt ID. A temporary resume failure keeps the draft and prevents a new attempt from overwriting it. An invalid/expired attempt is removed.
 - Draft writes and deletion are serialized so a late save cannot recreate a completed attempt's draft in the same screen.
 - Results show score, percentage, correct/wrong answers, selections and explanations. History supports paging and opening a past result.
+- Quiz is also available from each deck's menu. Results include pass/fail and completion time, support retrying the deck, render Markdown questions/answers/explanations, and let the student report a question with the same reasons as the web. A failed report keeps its note for retry; the server rejects duplicate pending reports and reports against another user's history.
 
 ## Groups and chat
 
-- List joined/discoverable groups, subjects, member counts and unread counts; create a public or approval-required group.
-- Join a group or cancel an approval request. Group moderation and invitation-link management remain web features.
+- List joined groups and unread counts. Discovery supports search by name/description, subject and access-mode filters, newest/popular sorting, and paging.
+- Create a public, approval-required or private group, optionally associated with one of the creator's subjects. Accept/decline in-app invitations, join public groups, cancel pending requests, or paste an invite link and preview the group before confirming.
+- Room members and online/web-waiting/offline states update through SignalR. Membership events appear alongside chat history. Revoked access closes room sub-screens as well as the room.
+- **Thông tin và quản lý nhóm** shows the member list. Owners/managers can invite by email, approve/reject requests, remove lower-role members and unban accounts. Only owners can change access mode, grant/revoke moderator status, transfer ownership, and create/copy/revoke invitation links (1/7/30 days or permanent). A non-owner can leave; the owner must transfer ownership first. Permissions are enforced by the backend.
 - Each room owns one `ChatConnection`. It sends the current JWT through SignalR's token factory, joins the room again after an automatic reconnect and refreshes message history.
 - History is paged with `beforeId`; messages are deduplicated by ID when HTTP history, hub events and send acknowledgements overlap.
 - Leaving a screen closes the connection. A delayed connection completion does not resume work on a disposed screen.
@@ -53,3 +56,15 @@ The mutating tests run only with explicit opt-in and a localhost URL. They creat
 - Widget tests cover phone layout and navigation, single/multiple selections, confirmation, draft resume, failed submissions, timer expiry, group creation/approval cancellation, hub duplicates, reconnect catch-up, old messages and disposal during connection setup.
 
 Physical Android/iOS devices, background suspension, network handoff and camera/QR are separate acceptance checks. Flashcards REST API availability depends on the backend TV2 PR; TV3 uses the existing quiz/history/groups endpoints on backend main.
+
+## Running the expanded TV3 features locally
+
+The mobile client and backend must both use the updated source in this workspace; an older Render backend does not expose the new management endpoints. Restart the existing backend after rebuilding, then run:
+
+```powershell
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:5039
+```
+
+Android emulator uses `http://10.0.2.2:5039`. Invite links copied from the web or mobile can be pasted using the link button on **Nhóm học**. Native OS app-link registration is not included; browser links still open the backend's web invitation page.
+
+Verification on 20 October 2026: backend build has zero warnings/errors; all **243 backend tests** pass, including HTTP management permissions, private invite links/revocation, history ownership for reports and duplicate report rejection. The Flutter suite has **89 passed**, with four opt-in live tests skipped. New widget coverage includes private creation/subject selection, discovery filters, invitation acceptance, owner/moderator actions, ownership transfer, member presence and reconnect status while the roster is open, nested-screen revocation and reporting/retry from quiz results. Existing user's local database was not seeded or reset.

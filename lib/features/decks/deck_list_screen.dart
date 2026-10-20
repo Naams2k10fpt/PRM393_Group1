@@ -58,10 +58,7 @@ class _DeckListScreenState extends State<DeckListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.subjectName ?? 'Bộ đề')),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: _body(),
-      ),
+      body: RefreshIndicator(onRefresh: _load, child: _body()),
     );
   }
 
@@ -107,15 +104,43 @@ class _DeckListScreenState extends State<DeckListScreen> {
         final deck = _decks[index];
         return Card(
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
             title: Text(deck.title),
             subtitle: Text(
               _subtitleFor(deck),
               style: const TextStyle(color: AppColors.textMuted),
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: PopupMenuButton<String>(
+              tooltip: 'Học với bộ đề',
+              onSelected: (action) {
+                if (action == 'quiz') {
+                  context.push(AppRoutes.quizFor(widget.subjectId, deck.id));
+                } else {
+                  context.push(AppRoutes.studyFor(deck.id), extra: deck.title);
+                }
+              },
+              itemBuilder:
+                  (_) => [
+                    const PopupMenuItem(
+                      value: 'study',
+                      child: Text('Học flashcard'),
+                    ),
+                    PopupMenuItem(
+                      value: 'quiz',
+                      enabled: deck.cardCount > 0,
+                      child: const Text('Làm quiz'),
+                    ),
+                  ],
+            ),
             // The title rides along so the study screen can name itself.
-            onTap: () => context.push(AppRoutes.studyFor(deck.id), extra: deck.title),
+            onTap:
+                () => context.push(
+                  AppRoutes.studyFor(deck.id),
+                  extra: deck.title,
+                ),
           ),
         );
       },

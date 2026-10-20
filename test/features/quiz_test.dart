@@ -44,6 +44,40 @@ String savedDraft() => jsonEncode({
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  testWidgets(
+    'result shows pass status, can retry and submits reports with history context',
+    (tester) async {
+      final repo = FakeQuizRepository()..reportError = offline;
+      await openQuiz(tester, repo);
+      await tester.tap(find.text('Bài đã làm 1'));
+      await tester.pumpAndSettle();
+      expect(find.text('Đạt'), findsOneWidget);
+      await tester.ensureVisible(find.text('Báo cáo câu hỏi').first);
+      await tester.tap(find.text('Báo cáo câu hỏi').first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Kiểm tra lại đáp án');
+      await tester.tap(find.text('Gửi báo cáo'));
+      await tester.pumpAndSettle();
+      expect(find.text(offline.message), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        'Kiểm tra lại đáp án',
+      );
+      repo.reportError = null;
+      await tester.tap(find.text('Gửi báo cáo'));
+      await tester.pumpAndSettle();
+      expect(
+        repo.calls,
+        contains('report:1:21:WrongAnswer:Kiểm tra lại đáp án'),
+      );
+      await tester.ensureVisible(find.text('Làm lại bài quiz'));
+      await tester.tap(find.text('Làm lại bài quiz'));
+      await tester.pumpAndSettle();
+      expect(repo.calls, contains('start:7:2'));
+      expect(find.text('Làm bài'), findsOneWidget);
+    },
+  );
+
   testWidgets('quiz entry coexists with subjects and history opens a result', (
     tester,
   ) async {

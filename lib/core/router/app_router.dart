@@ -37,6 +37,11 @@ class AppRoutes {
 
   /// Concrete path for one deck's study session; [flashcardStudy] is the pattern.
   static String studyFor(String deckId) => '/decks/$deckId/study';
+  static String quizFor(String subjectId, String deckId) =>
+      Uri(
+        path: quiz,
+        queryParameters: {'subjectId': subjectId, 'deckId': deckId},
+      ).toString();
 
   /// Reachable without an account. Kahoot players may join as guests.
   static const public = {login, register, checkEmail, kahoot};
@@ -117,7 +122,15 @@ GoRouter createRouter(AuthController auth) {
       ),
       GoRoute(
         path: AppRoutes.quiz,
-        builder: (context, state) => const QuizScreen(),
+        builder:
+            (context, state) => QuizScreen(
+              initialSubjectId: int.tryParse(
+                state.uri.queryParameters['subjectId'] ?? '',
+              ),
+              initialDeckId: int.tryParse(
+                state.uri.queryParameters['deckId'] ?? '',
+              ),
+            ),
       ),
       GoRoute(
         path: AppRoutes.groups,
