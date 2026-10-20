@@ -7,7 +7,11 @@ Flutter mobile app for the Quiz Management system — the mobile version of
 
 - Account: login, register (email verification), profile, change password
 - Kahoot Live player: join by PIN or QR code, answer in realtime (SignalR)
-- More coming: subjects & flashcards, personal quizzes, study-group chat
+- Subjects and decks, flashcard study with flip/swipe and review progress
+- Personal quizzes: single/multiple answers, timer, draft recovery, results and paged history
+- Study groups: create/discover/join, cancel pending requests, realtime chat and unread counts
+
+TV3 implementation and verification: [Quiz and group chat](docs/tv3-mobile.md).
 
 ## Getting started
 

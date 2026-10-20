@@ -9,7 +9,9 @@ import 'data/api/token_storage.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/catalog_repository.dart';
 import 'data/repositories/flashcard_repository.dart';
+import 'data/repositories/groups_repository.dart';
 import 'data/repositories/profile_repository.dart';
+import 'data/repositories/quiz_repository.dart';
 import 'features/auth/auth_controller.dart';
 
 void main() {
@@ -24,13 +26,17 @@ void main() {
   final auth = AuthController(authRepository, profileRepository);
   api.onUnauthorized = auth.handleUnauthorized;
 
-  runApp(QuizManagementApp(
-    auth: auth,
-    authRepository: authRepository,
-    profileRepository: profileRepository,
-    catalogRepository: catalogRepository,
-    flashcardRepository: flashcardRepository,
-  ));
+  runApp(
+    QuizManagementApp(
+      auth: auth,
+      authRepository: authRepository,
+      profileRepository: profileRepository,
+      catalogRepository: catalogRepository,
+      flashcardRepository: flashcardRepository,
+      quizRepository: QuizRepository(api),
+      groupsRepository: GroupsRepository(api),
+    ),
+  );
   auth.restoreSession();
 }
 
@@ -43,6 +49,8 @@ class QuizManagementApp extends StatefulWidget {
     required this.profileRepository,
     required this.catalogRepository,
     required this.flashcardRepository,
+    required this.quizRepository,
+    required this.groupsRepository,
   });
 
   final AuthController auth;
@@ -50,6 +58,8 @@ class QuizManagementApp extends StatefulWidget {
   final ProfileRepository profileRepository;
   final CatalogRepository catalogRepository;
   final FlashcardRepository flashcardRepository;
+  final QuizRepository quizRepository;
+  final GroupsRepository groupsRepository;
 
   @override
   State<QuizManagementApp> createState() => _QuizManagementAppState();
@@ -72,6 +82,8 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
         Provider<ProfileRepository>.value(value: widget.profileRepository),
         Provider<CatalogRepository>.value(value: widget.catalogRepository),
         Provider<FlashcardRepository>.value(value: widget.flashcardRepository),
+        Provider<QuizRepository>.value(value: widget.quizRepository),
+        Provider<GroupsRepository>.value(value: widget.groupsRepository),
         ChangeNotifierProvider<AuthController>.value(value: widget.auth),
       ],
       child: MaterialApp.router(

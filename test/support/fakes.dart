@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_management_mobile/data/api/api_client.dart';
+import 'package:quiz_management_mobile/data/api/token_storage.dart';
 import 'package:quiz_management_mobile/data/api/api_exception.dart';
 import 'package:quiz_management_mobile/data/models/app_user.dart';
 import 'package:quiz_management_mobile/data/models/deck.dart';
@@ -8,15 +10,29 @@ import 'package:quiz_management_mobile/data/models/subject.dart';
 import 'package:quiz_management_mobile/data/repositories/auth_repository.dart';
 import 'package:quiz_management_mobile/data/repositories/catalog_repository.dart';
 import 'package:quiz_management_mobile/data/repositories/flashcard_repository.dart';
+import 'package:quiz_management_mobile/data/repositories/groups_repository.dart';
 import 'package:quiz_management_mobile/data/repositories/profile_repository.dart';
+import 'package:quiz_management_mobile/data/repositories/quiz_repository.dart';
 import 'package:quiz_management_mobile/features/auth/auth_controller.dart';
 import 'package:quiz_management_mobile/main.dart';
 
-const demoUser = AppUser(id: 'u1', username: 'user_demo', email: 'user.demo@quiz.local', role: 'User');
+const demoUser = AppUser(
+  id: 'u1',
+  username: 'user_demo',
+  email: 'user.demo@quiz.local',
+  role: 'User',
+);
 const demoPassword = 'Test@123456';
 
-const unauthorized = ApiException(code: 'unauthorized', message: 'Bạn cần đăng nhập.', statusCode: 401);
-const offline = ApiException(code: ApiException.networkError, message: 'Không kết nối được máy chủ.');
+const unauthorized = ApiException(
+  code: 'unauthorized',
+  message: 'Bạn cần đăng nhập.',
+  statusCode: 401,
+);
+const offline = ApiException(
+  code: ApiException.networkError,
+  message: 'Không kết nối được máy chủ.',
+);
 
 /// In-memory stand-in for the backend's /api/auth endpoints.
 class FakeAuthRepository implements AuthRepository {
@@ -90,7 +106,10 @@ class FakeProfileRepository implements ProfileRepository {
   }
 
   @override
-  Future<AppUser> updateProfile({required String username, String? avatarUrl}) async {
+  Future<AppUser> updateProfile({
+    required String username,
+    String? avatarUrl,
+  }) async {
     calls.add('update:$username:${avatarUrl ?? ''}');
     if (updateError != null) throw updateError!;
     return user = AppUser(
@@ -119,7 +138,13 @@ const demoSubjects = [
 ];
 
 const demoDecks = [
-  Deck(id: '10', title: 'Flutter cơ bản', subjectId: '1', cardCount: 2, dueCount: 2),
+  Deck(
+    id: '10',
+    title: 'Flutter cơ bản',
+    subjectId: '1',
+    cardCount: 2,
+    dueCount: 2,
+  ),
   Deck(id: '11', title: 'State management', subjectId: '1', cardCount: 0),
 ];
 
@@ -170,11 +195,13 @@ class FakeCatalogRepository implements CatalogRepository {
     if (decksError != null) throw decksError!;
     return deckList.firstWhere(
       (deck) => deck.id == deckId,
-      orElse: () => throw const ApiException(
-        code: 'deck_not_found',
-        message: 'Không tìm thấy bộ đề.',
-        statusCode: 404,
-      ),
+      orElse:
+          () =>
+              throw const ApiException(
+                code: 'deck_not_found',
+                message: 'Không tìm thấy bộ đề.',
+                statusCode: 404,
+              ),
     );
   }
 }
@@ -196,7 +223,10 @@ class FakeFlashcardRepository implements FlashcardRepository {
   final calls = <String>[];
 
   @override
-  Future<FlashcardSession> session(String deckId, {bool studyAll = false}) async {
+  Future<FlashcardSession> session(
+    String deckId, {
+    bool studyAll = false,
+  }) async {
     calls.add('session:$deckId:${studyAll ? 'all' : 'due'}');
     if (loadError != null) throw loadError!;
     return FlashcardSession(
@@ -218,7 +248,11 @@ class FakeFlashcardRepository implements FlashcardRepository {
     calls.add('review:$questionId:$remembered');
     if (reviewError != null) throw reviewError!;
     reviews.add((questionId: questionId, remembered: remembered));
-    return FlashcardReview(questionId: questionId, repetition: 1, intervalMinutes: 10);
+    return FlashcardReview(
+      questionId: questionId,
+      repetition: 1,
+      intervalMinutes: 10,
+    );
   }
 }
 
@@ -229,10 +263,17 @@ class TestApp {
     FakeProfileRepository? profile,
     FakeCatalogRepository? catalog,
     FakeFlashcardRepository? flashcards,
-  })  : authRepository = FakeAuthRepository(token: token),
-        profileRepository = profile ?? FakeProfileRepository(),
-        catalogRepository = catalog ?? FakeCatalogRepository(),
-        flashcardRepository = flashcards ?? FakeFlashcardRepository() {
+    QuizRepository? quiz,
+    GroupsRepository? groups,
+  }) : authRepository = FakeAuthRepository(token: token),
+       profileRepository = profile ?? FakeProfileRepository(),
+       catalogRepository = catalog ?? FakeCatalogRepository(),
+       flashcardRepository = flashcards ?? FakeFlashcardRepository(),
+       quizRepository =
+           quiz ?? QuizRepository(ApiClient(tokens: InMemoryTokenStorage())),
+       groupsRepository =
+           groups ??
+           GroupsRepository(ApiClient(tokens: InMemoryTokenStorage())) {
     auth = AuthController(authRepository, profileRepository);
   }
 
@@ -240,6 +281,8 @@ class TestApp {
   final FakeProfileRepository profileRepository;
   final FakeCatalogRepository catalogRepository;
   final FakeFlashcardRepository flashcardRepository;
+  final QuizRepository quizRepository;
+  final GroupsRepository groupsRepository;
   late final AuthController auth;
 
   Future<void> start(WidgetTester tester) async {
@@ -248,13 +291,17 @@ class TestApp {
     tester.view.devicePixelRatio = 2.75;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(QuizManagementApp(
-      auth: auth,
-      authRepository: authRepository,
-      profileRepository: profileRepository,
-      catalogRepository: catalogRepository,
-      flashcardRepository: flashcardRepository,
-    ));
+    await tester.pumpWidget(
+      QuizManagementApp(
+        auth: auth,
+        authRepository: authRepository,
+        profileRepository: profileRepository,
+        catalogRepository: catalogRepository,
+        flashcardRepository: flashcardRepository,
+        quizRepository: quizRepository,
+        groupsRepository: groupsRepository,
+      ),
+    );
     await auth.restoreSession();
     await tester.pumpAndSettle();
   }

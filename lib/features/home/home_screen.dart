@@ -80,9 +80,15 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (user != null) ...[
-              Text('Chào ${user.username}', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Chào ${user.username}',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 4),
-              const Text('Hôm nay học gì nào?', style: TextStyle(color: AppColors.textMuted)),
+              const Text(
+                'Hôm nay học gì nào?',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
               const SizedBox(height: 20),
             ],
             Card(
@@ -92,6 +98,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: const Text('Nhập mã PIN hoặc quét QR để vào phòng'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(AppRoutes.kahoot),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.quiz_outlined),
+                title: const Text('Quiz cá nhân'),
+                subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.quiz),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.forum_outlined),
+                title: const Text('Nhóm học'),
+                subtitle: const Text('Tham gia và trò chuyện thời gian thực'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.groups),
               ),
             ),
             const SizedBox(height: 24),
@@ -132,7 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(Icons.inbox_outlined, size: 40, color: AppColors.textMuted),
               SizedBox(height: 12),
-              Text('Chưa có môn học nào.', style: TextStyle(color: AppColors.textMuted)),
+              Text(
+                'Chưa có môn học nào.',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
             ],
           ),
         ),
@@ -159,7 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
           return SubjectCard(
             subject: subject,
             // The name rides along so the deck list can title itself without a second request.
-            onTap: () => context.push(AppRoutes.decksFor(subject.id), extra: subject.name),
+            onTap:
+                () => context.push(
+                  AppRoutes.decksFor(subject.id),
+                  extra: subject.name,
+                ),
           );
         },
       ),
