@@ -86,11 +86,18 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
         Provider<GroupsRepository>.value(value: widget.groupsRepository),
         ChangeNotifierProvider<AuthController>.value(value: widget.auth),
       ],
-      child: MaterialApp.router(
-        title: 'Quiz Management',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark(),
-        routerConfig: _router,
+      child: ValueListenableBuilder<ThemeMode>(
+        valueListenable: AppTheme.themeModeNotifier,
+        builder: (context, themeMode, _) {
+          return MaterialApp.router(
+            title: 'Quiz Management',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: themeMode,
+            routerConfig: _router,
+          );
+        },
       ),
     );
   }

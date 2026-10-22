@@ -62,6 +62,18 @@ class ProfileScreen extends StatelessWidget {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push(AppRoutes.changePassword),
                 ),
+                ValueListenableBuilder<ThemeMode>(
+                  valueListenable: AppTheme.themeModeNotifier,
+                  builder: (context, mode, _) {
+                    final isDark = mode == ThemeMode.dark;
+                    return SwitchListTile(
+                      secondary: Icon(isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined),
+                      title: const Text('Giao diện tối (Dark Mode)'),
+                      value: isDark,
+                      onChanged: (_) => AppTheme.toggleTheme(),
+                    );
+                  },
+                ),
               ],
             ),
           ),

@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 /// Academic Cyber Ambient Background
 ///
 /// Draws a smooth multi-layered ambient space:
-/// 1. Deep midnight gradient base (#0B1120 -> #070B14)
-/// 2. Glowing radial diffuse orbs (Primary Indigo #7C6DF8, Secondary Cyan #22D3EE, Warm Amber #FBBF24)
-/// 3. Subtle dot-matrix grid with faint academic constellation nodes
-/// 4. Soft mathematical & academic runes (✦, ∑, λ, π, ?, ⚡) rendered with subtle transparency
+/// 1. Deep midnight gradient base in Dark mode (#0B1120 -> #070B14) or soft daylight slate (#F8FAFC -> #E2E8F0) in Light mode.
+/// 2. Glowing radial diffuse orbs (Indigo, Cyan, Warm Amber).
+/// 3. Subtle dot-matrix grid with faint academic constellation nodes.
+/// 4. Soft mathematical & academic runes (✦, ∑, λ, π, ?, ⚡) rendered with subtle transparency.
 class AcademicAmbientBackground extends StatelessWidget {
   const AcademicAmbientBackground({
     super.key,
@@ -20,9 +20,10 @@ class AcademicAmbientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: CustomPaint(
-        painter: _AcademicBackgroundPainter(showRunes: showRunes),
+        painter: _AcademicBackgroundPainter(showRunes: showRunes, isDark: isDark),
         child: child,
       ),
     );
@@ -30,23 +31,36 @@ class AcademicAmbientBackground extends StatelessWidget {
 }
 
 class _AcademicBackgroundPainter extends CustomPainter {
-  const _AcademicBackgroundPainter({required this.showRunes});
+  const _AcademicBackgroundPainter({
+    required this.showRunes,
+    required this.isDark,
+  });
 
   final bool showRunes;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Deep Midnight Base Gradient
     final rect = Offset.zero & size;
+
+    // 1. Base Gradient
+    final baseColors = isDark
+        ? const [
+            Color(0xFF0F172A),
+            Color(0xFF0B1120),
+            Color(0xFF060913),
+          ]
+        : const [
+            Color(0xFFF8FAFC),
+            Color(0xFFF1F5F9),
+            Color(0xFFE2E8F0),
+          ];
+
     final basePaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF0F172A),
-          Color(0xFF0B1120),
-          Color(0xFF060913),
-        ],
+        colors: baseColors,
       ).createShader(rect);
     canvas.drawRect(rect, basePaint);
 
@@ -54,11 +68,13 @@ class _AcademicBackgroundPainter extends CustomPainter {
     // Top-right glowing indigo orb
     final orb1Center = Offset(size.width * 0.85, size.height * 0.15);
     final orb1Radius = math.max(size.width, size.height) * 0.55;
+    final orb1Color = isDark ? const Color(0xFF7C6DF8) : const Color(0xFF6366F1);
+    final orb1Alpha = isDark ? 0.16 : 0.12;
     final orb1Paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF7C6DF8).withValues(alpha: 0.16),
-          const Color(0xFF6366F1).withValues(alpha: 0.08),
+          orb1Color.withValues(alpha: orb1Alpha),
+          orb1Color.withValues(alpha: orb1Alpha * 0.5),
           Colors.transparent,
         ],
         stops: const [0.0, 0.45, 1.0],
@@ -68,11 +84,13 @@ class _AcademicBackgroundPainter extends CustomPainter {
     // Bottom-left glowing cyan orb
     final orb2Center = Offset(size.width * 0.1, size.height * 0.8);
     final orb2Radius = math.max(size.width, size.height) * 0.5;
+    final orb2Color = isDark ? const Color(0xFF22D3EE) : const Color(0xFF0284C7);
+    final orb2Alpha = isDark ? 0.12 : 0.10;
     final orb2Paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF22D3EE).withValues(alpha: 0.12),
-          const Color(0xFF0EA5E9).withValues(alpha: 0.05),
+          orb2Color.withValues(alpha: orb2Alpha),
+          orb2Color.withValues(alpha: orb2Alpha * 0.4),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -82,28 +100,35 @@ class _AcademicBackgroundPainter extends CustomPainter {
     // Center-right subtle warm amber orb
     final orb3Center = Offset(size.width * 0.7, size.height * 0.55);
     final orb3Radius = math.max(size.width, size.height) * 0.35;
+    final orb3Color = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+    final orb3Alpha = isDark ? 0.06 : 0.05;
     final orb3Paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFFFBBF24).withValues(alpha: 0.06),
+          orb3Color.withValues(alpha: orb3Alpha),
           Colors.transparent,
         ],
       ).createShader(Rect.fromCircle(center: orb3Center, radius: orb3Radius));
     canvas.drawCircle(orb3Center, orb3Radius, orb3Paint);
 
     // 3. Dot-matrix Grid
+    final dotColor = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : const Color(0xFF64748B).withValues(alpha: 0.10);
     final dotPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
+      ..color = dotColor
       ..style = PaintingStyle.fill;
 
     const spacing = 36.0;
     for (double x = 18; x < size.width; x += spacing) {
       for (double y = 18; y < size.height; y += spacing) {
-        // Pseudo-random subtle opacity variation based on coordinates
         final n = math.sin(x * 0.05) * math.cos(y * 0.05);
         if (n > 0.4) {
+          final highlightColor = isDark
+              ? const Color(0xFF22D3EE).withValues(alpha: 0.18)
+              : const Color(0xFF6366F1).withValues(alpha: 0.20);
           final highlightPaint = Paint()
-            ..color = const Color(0xFF22D3EE).withValues(alpha: 0.18)
+            ..color = highlightColor
             ..style = PaintingStyle.fill;
           canvas.drawCircle(Offset(x, y), 1.2, highlightPaint);
         } else {
@@ -113,8 +138,11 @@ class _AcademicBackgroundPainter extends CustomPainter {
     }
 
     // 4. Subtle Constellation Lines connecting a few key nodes
+    final lineColor = isDark
+        ? const Color(0xFF7C6DF8).withValues(alpha: 0.09)
+        : const Color(0xFF6366F1).withValues(alpha: 0.11);
     final linePaint = Paint()
-      ..color = const Color(0xFF7C6DF8).withValues(alpha: 0.09)
+      ..color = lineColor
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
@@ -135,14 +163,23 @@ class _AcademicBackgroundPainter extends CustomPainter {
 
     // 5. Academic Runes & Symbols (soft, subtle watermark style)
     if (showRunes && size.width > 200 && size.height > 200) {
-      final runes = [
-        _RuneSpec('✦', Offset(size.width * 0.88, size.height * 0.08), 16, const Color(0xFFFBBF24).withValues(alpha: 0.25)),
-        _RuneSpec('∑', Offset(size.width * 0.12, size.height * 0.18), 22, const Color(0xFF7C6DF8).withValues(alpha: 0.18)),
-        _RuneSpec('λ', Offset(size.width * 0.82, size.height * 0.42), 20, const Color(0xFF22D3EE).withValues(alpha: 0.15)),
-        _RuneSpec('π', Offset(size.width * 0.08, size.height * 0.62), 20, const Color(0xFF34D399).withValues(alpha: 0.14)),
-        _RuneSpec('⚡', Offset(size.width * 0.92, size.height * 0.88), 16, const Color(0xFFFBBF24).withValues(alpha: 0.20)),
-        _RuneSpec('?', Offset(size.width * 0.25, size.height * 0.85), 24, const Color(0xFF7C6DF8).withValues(alpha: 0.12)),
-      ];
+      final runes = isDark
+          ? [
+              _RuneSpec('✦', Offset(size.width * 0.88, size.height * 0.08), 16, const Color(0xFFFBBF24).withValues(alpha: 0.25)),
+              _RuneSpec('∑', Offset(size.width * 0.12, size.height * 0.18), 22, const Color(0xFF7C6DF8).withValues(alpha: 0.18)),
+              _RuneSpec('λ', Offset(size.width * 0.82, size.height * 0.42), 20, const Color(0xFF22D3EE).withValues(alpha: 0.15)),
+              _RuneSpec('π', Offset(size.width * 0.08, size.height * 0.62), 20, const Color(0xFF34D399).withValues(alpha: 0.14)),
+              _RuneSpec('⚡', Offset(size.width * 0.92, size.height * 0.88), 16, const Color(0xFFFBBF24).withValues(alpha: 0.20)),
+              _RuneSpec('?', Offset(size.width * 0.25, size.height * 0.85), 24, const Color(0xFF7C6DF8).withValues(alpha: 0.12)),
+            ]
+          : [
+              _RuneSpec('✦', Offset(size.width * 0.88, size.height * 0.08), 16, const Color(0xFFD97706).withValues(alpha: 0.25)),
+              _RuneSpec('∑', Offset(size.width * 0.12, size.height * 0.18), 22, const Color(0xFF6366F1).withValues(alpha: 0.22)),
+              _RuneSpec('λ', Offset(size.width * 0.82, size.height * 0.42), 20, const Color(0xFF0284C7).withValues(alpha: 0.20)),
+              _RuneSpec('π', Offset(size.width * 0.08, size.height * 0.62), 20, const Color(0xFF16A34A).withValues(alpha: 0.20)),
+              _RuneSpec('⚡', Offset(size.width * 0.92, size.height * 0.88), 16, const Color(0xFFD97706).withValues(alpha: 0.22)),
+              _RuneSpec('?', Offset(size.width * 0.25, size.height * 0.85), 24, const Color(0xFF6366F1).withValues(alpha: 0.16)),
+            ];
 
       for (final r in runes) {
         final tp = TextPainter(
@@ -164,7 +201,7 @@ class _AcademicBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _AcademicBackgroundPainter oldDelegate) {
-    return oldDelegate.showRunes != showRunes;
+    return oldDelegate.showRunes != showRunes || oldDelegate.isDark != isDark;
   }
 }
 

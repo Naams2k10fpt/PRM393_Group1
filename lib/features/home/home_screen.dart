@@ -64,6 +64,17 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Quiz Management'),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: AppTheme.themeModeNotifier,
+            builder: (context, mode, _) {
+              final isDark = mode == ThemeMode.dark;
+              return IconButton(
+                tooltip: isDark ? 'Chế độ Sáng' : 'Chế độ Tối',
+                icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                onPressed: AppTheme.toggleTheme,
+              );
+            },
+          ),
           if (user != null)
             IconButton(
               tooltip: 'Hồ sơ',
