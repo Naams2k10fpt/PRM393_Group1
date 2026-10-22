@@ -9,6 +9,13 @@ class ChatRecordingApi extends ApiClient {
   ChatRecordingApi() : super(tokens: InMemoryTokenStorage());
   FormData? form;
   String? path;
+  List<Map<String, dynamic>> channelResponse = [];
+  @override
+  Future<dynamic> get(String path, {Map<String, dynamic>? query}) async {
+    this.path = path;
+    return channelResponse;
+  }
+
   @override
   Future<dynamic> postMultipart(String path, FormData data) async {
     this.path = path;
@@ -27,6 +34,37 @@ class ChatRecordingApi extends ApiClient {
 }
 
 void main() {
+  test(
+    'mobile text navigation accepts legacy channels and excludes voice rooms',
+    () async {
+      final api = ChatRecordingApi();
+      Map<String, dynamic> channel(int id, String name, [int? kind]) => {
+        'id': id,
+        'groupId': 7,
+        'name': name,
+        'isDefault': id == 1,
+        if (kind != null) 'kind': kind,
+      };
+      api.channelResponse = [
+        channel(1, 'chung', 0),
+        channel(2, 'phong-hoc', 1),
+        channel(3, 'legacy'),
+        channel(4, 'bai-tap', 0),
+      ];
+
+      final channels = await GroupsRepository(api).channels(7);
+
+      expect(api.path, '/api/groups/7/channels');
+      expect(channels.map((channel) => channel.id), [1, 3, 4]);
+      expect(channels.first.isDefault, isTrue);
+      expect(channels.map((channel) => channel.name), [
+        'chung',
+        'legacy',
+        'bai-tap',
+      ]);
+    },
+  );
+
   test(
     'multipart sends channel, reply, retry identity and file bytes without exposing credentials in URLs',
     () async {
