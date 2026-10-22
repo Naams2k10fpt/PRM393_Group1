@@ -111,7 +111,7 @@ class _AcademicBackgroundPainter extends CustomPainter {
       ).createShader(Rect.fromCircle(center: orb3Center, radius: orb3Radius));
     canvas.drawCircle(orb3Center, orb3Radius, orb3Paint);
 
-    // 3. Dense Dot-matrix Grid (Increased density of tiny background dots)
+    // 3. Dense Dot-matrix Grid
     final dotColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : const Color(0xFF64748B).withValues(alpha: 0.12);
@@ -119,9 +119,9 @@ class _AcademicBackgroundPainter extends CustomPainter {
       ..color = dotColor
       ..style = PaintingStyle.fill;
 
-    const spacing = 20.0;
-    for (double x = 10; x < size.width; x += spacing) {
-      for (double y = 10; y < size.height; y += spacing) {
+    const spacing = 36.0;
+    for (double x = 18; x < size.width; x += spacing) {
+      for (double y = 18; y < size.height; y += spacing) {
         final n = math.sin(x * 0.04) * math.cos(y * 0.04);
         if (n > 0.45) {
           final highlightColor = isDark
