@@ -40,11 +40,25 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "quiz_management_mobile");
+    gtk_header_bar_set_title(header_bar, "QuizMS");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "quiz_management_mobile");
+    gtk_window_set_title(window, "QuizMS");
+  }
+
+  // Set application window icon matching Web's QuizMS emblem
+  const gchar* icon_paths[] = {
+    "assets/icon/app_icon.png",
+    "data/flutter_assets/assets/icon/app_icon.png",
+    "/home/amtia/Projects/prn+prm/PRM393_Group1/assets/icon/app_icon.png",
+    NULL
+  };
+  for (int i = 0; icon_paths[i] != NULL; i++) {
+    if (g_file_test(icon_paths[i], G_FILE_TEST_EXISTS)) {
+      gtk_window_set_icon_from_file(window, icon_paths[i], NULL);
+      break;
+    }
   }
 
   gtk_window_set_default_size(window, 1280, 720);

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -81,14 +82,17 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
               children: [
-                Icon(Icons.school_rounded, size: 64, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(height: 12),
+                const Center(child: BrandEmblem(size: 68)),
+                const SizedBox(height: 16),
                 Text(
-                  'Đăng nhập',
+                  'Đăng nhập QuizMS',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,

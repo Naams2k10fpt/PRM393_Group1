@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
+import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -66,8 +67,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: _form,
           child: AutofillGroup(
             child: ListView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
               children: [
+                const Center(child: BrandEmblem(size: 68)),
+                const SizedBox(height: 16),
+                Text(
+                  'Tạo tài khoản QuizMS',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                ),
+                const SizedBox(height: 28),
                 TextFormField(
                   controller: _username,
                   textInputAction: TextInputAction.next,

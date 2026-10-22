@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/subject.dart';
@@ -61,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quiz Management'),
+        title: const BrandLogo(size: 32, showText: true),
         actions: [
           ValueListenableBuilder<ThemeMode>(
             valueListenable: AppTheme.themeModeNotifier,

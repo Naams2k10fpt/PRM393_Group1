@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/brand_logo.dart';
 import 'auth_controller.dart';
 
 /// Shown while the stored token is checked. The router leaves this screen once the status is known;
@@ -21,9 +22,15 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.school_rounded, size: 72, color: Theme.of(context).colorScheme.primary),
+              const BrandEmblem(size: 80),
               const SizedBox(height: 16),
-              Text('Quiz Management', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'QuizMS',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+              ),
               const SizedBox(height: 32),
               if (error == null) ...[
                 const CircularProgressIndicator(),
