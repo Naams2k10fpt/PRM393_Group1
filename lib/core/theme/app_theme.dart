@@ -111,6 +111,23 @@ class AppTheme {
         ),
       ),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppDarkColors.surface,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x33818CF8), width: 1.2),
+        ),
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppDarkColors.textPrimary,
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 15,
+          color: AppDarkColors.textMuted,
+        ),
+      ),
     );
   }
 
@@ -169,6 +186,24 @@ class AppTheme {
         ),
       ),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppLightColors.surface,
+        elevation: 8,
+        shadowColor: const Color(0x1A000000),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x1F6366F1), width: 1.2),
+        ),
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppLightColors.textPrimary,
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 15,
+          color: AppLightColors.textMuted,
+        ),
+      ),
     );
   }
 }
