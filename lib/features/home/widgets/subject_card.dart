@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../../data/models/subject.dart';
 
 /// One tile in the Home grid. Shows the deck count so an empty subject is

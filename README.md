@@ -12,6 +12,7 @@ Flutter mobile app for the Quiz Management system — the mobile version of
 - Study groups: create/discover/join, cancel pending requests, realtime chat and unread counts
 
 TV3 implementation and verification: [Quiz and group chat](docs/tv3-mobile.md).
+Channel chat with replies, reactions and study files: [TV3 channel chat](docs/channel-chat.md).
 
 ## Getting started
 

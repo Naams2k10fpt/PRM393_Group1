@@ -222,6 +222,44 @@ class FakeGroupsRepository extends GroupsRepository {
   final calls = <String>[];
 
   @override
+  Future<List<ChatChannel>> channels(int id) async => [
+    ChatChannel.fromJson({
+      'id': 1,
+      'groupId': id,
+      'name': 'chung',
+      'isDefault': true,
+      'unreadCount': 0,
+    }),
+  ];
+
+  @override
+  Future<List<ChatMessage>> channelMessages(
+    int id,
+    int channelId, {
+    int? beforeId,
+    int? afterId,
+  }) async {
+    final data = await messages(id, beforeId: beforeId);
+    return afterId == null
+        ? data
+        : data.where((message) => message.id > afterId).toList();
+  }
+
+  @override
+  Future<void> readChannel(int id, int channelId, int messageId) =>
+      markRead(id, messageId);
+
+  @override
+  Future<ChatMessage> sendChannelMessage(
+    int id,
+    int channelId,
+    String content,
+    String nonce, {
+    int? replyToId,
+    List<ChatUpload> files = const [],
+  }) async => (await connection.send(content))!;
+
+  @override
   ChatConnection openChat(int groupId) => connection;
 
   @override

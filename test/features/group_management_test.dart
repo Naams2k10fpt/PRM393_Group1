@@ -174,7 +174,7 @@ void main() {
       repo.connection.onPresence!({'u2'});
       await tester.tap(find.byTooltip('Thành viên'));
       await tester.pumpAndSettle();
-      expect(find.text('Thành viên · Online'), findsOneWidget);
+      expect(find.text('Thành viên · Trong phòng'), findsOneWidget);
       repo.connection.onPresence!({});
       await tester.pumpAndSettle();
       expect(find.text('Thành viên · Ngoại tuyến'), findsOneWidget);
@@ -186,7 +186,7 @@ void main() {
       );
       await repo.connection.onReconnected!();
       await tester.pumpAndSettle();
-      expect(find.text('0 đang trong phòng chat'), findsOneWidget);
+      expect(find.text('THÀNH VIÊN · 1'), findsOneWidget);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Thông tin và quản lý nhóm'));

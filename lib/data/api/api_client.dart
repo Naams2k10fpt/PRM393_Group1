@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../core/config/app_config.dart';
@@ -19,7 +20,9 @@ class ApiClient {
       ..receiveTimeout = const Duration(seconds: 60)
       ..contentType = Headers.jsonContentType
       ..responseType = ResponseType.json;
-    this.dio.interceptors.add(InterceptorsWrapper(onRequest: _onRequest, onError: _onError));
+    this.dio.interceptors.add(
+      InterceptorsWrapper(onRequest: _onRequest, onError: _onError),
+    );
   }
 
   final Dio dio;
@@ -33,17 +36,44 @@ class ApiClient {
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) =>
       _send(() => dio.get<dynamic>(path, queryParameters: query));
 
-  Future<dynamic> post(String path, {Object? data, bool auth = true}) =>
-      _send(() => dio.post<dynamic>(path, data: data, options: Options(extra: {_authExtra: auth})));
+  Future<dynamic> post(String path, {Object? data, bool auth = true}) => _send(
+    () => dio.post<dynamic>(
+      path,
+      data: data,
+      options: Options(extra: {_authExtra: auth}),
+    ),
+  );
 
-  Future<dynamic> put(String path, {Object? data}) => _send(() => dio.put<dynamic>(path, data: data));
+  Future<dynamic> put(String path, {Object? data}) =>
+      _send(() => dio.put<dynamic>(path, data: data));
 
   Future<dynamic> delete(String path) => _send(() => dio.delete<dynamic>(path));
+
+  Future<dynamic> postMultipart(String path, FormData data) => _send(
+    () => dio.post<dynamic>(
+      path,
+      data: data,
+      options: Options(contentType: 'multipart/form-data'),
+    ),
+  );
+
+  Future<Uint8List> download(String path) async => Uint8List.fromList(
+    (await _send(
+          () => dio.get<List<int>>(
+            path,
+            options: Options(responseType: ResponseType.bytes),
+          ),
+        ))
+        as List<int>,
+  );
 
   /// For SignalR `accessTokenFactory`: hubs take the same token as `?access_token=`.
   Future<String> accessToken() async => await tokens.read() ?? '';
 
-  Future<void> _onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  Future<void> _onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     options.baseUrl = AppConfig.baseUrl;
     if (options.extra[_authExtra] != false) {
       final token = await tokens.read();
@@ -54,7 +84,10 @@ class ApiClient {
     handler.next(options);
   }
 
-  Future<void> _onError(DioException error, ErrorInterceptorHandler handler) async {
+  Future<void> _onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
     final sentToken = error.requestOptions.headers.containsKey('Authorization');
     if (error.response?.statusCode == 401 && sentToken) {
       await tokens.clear();
@@ -110,7 +143,8 @@ class ApiClient {
 
     return ApiException(
       code: ApiException.unknown,
-      message: 'Đã có lỗi xảy ra (${response?.statusCode ?? 'không có phản hồi'}). Vui lòng thử lại.',
+      message:
+          'Đã có lỗi xảy ra (${response?.statusCode ?? 'không có phản hồi'}). Vui lòng thử lại.',
       statusCode: response?.statusCode,
     );
   }

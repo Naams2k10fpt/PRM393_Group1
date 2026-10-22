@@ -1,6 +1,8 @@
 // Mutates only an explicitly enabled, isolated local demo database.
 // LIVE_API_BASE_URL=http://127.0.0.1:5049 TV3_LIVE_MUTATIONS=1 flutter test test/live/tv3_live_test.dart
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -95,7 +97,8 @@ void main() {
       });
       final received = Completer<ChatMessage>();
       readerConnection.onMessage = (message) {
-        if (message.content == 'Tin nhắn kiểm thử TV3' && !received.isCompleted) {
+        if (message.content == 'Tin nhắn kiểm thử TV3' &&
+            !received.isCompleted) {
           received.complete(message);
         }
       };
@@ -130,6 +133,116 @@ void main() {
           group.id,
         )).where((message) => message.id == sent.id),
         hasLength(1),
+      );
+    },
+    skip: skip,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test(
+    'channel files, replies, edits and reactions sync between real clients',
+    () async {
+      final author = GroupsRepository(await signIn('user.demo@quiz.local'));
+      final reader = GroupsRepository(await signIn('mentor.demo@quiz.local'));
+      final name =
+          'Channel verification ${DateTime.now().microsecondsSinceEpoch}';
+      await author.create(name, 'Disposable preview verification', 0);
+      final group = (await author.mine()).singleWhere(
+        (item) => item.name == name,
+      );
+      await reader.join(group.id);
+      await author.saveChannel(
+        group.id,
+        'tài-liệu',
+        'File and realtime verification',
+      );
+      final channel = (await author.channels(
+        group.id,
+      )).singleWhere((item) => item.name == 'tài-liệu');
+      final writer = author.openChat(group.id),
+          viewer = reader.openChat(group.id);
+      addTearDown(() async {
+        await writer.close();
+        await viewer.close();
+      });
+      final received = Completer<ChatMessage>(),
+          updated = Completer<ChatMessage>();
+      viewer.onMessage = (message) {
+        if (message.channelId == channel.id && !received.isCompleted) {
+          received.complete(message);
+        }
+      };
+      viewer.onMessageUpdated = (message) {
+        if (message.channelId == channel.id &&
+            message.editedAt != null &&
+            !updated.isCompleted) {
+          updated.complete(message);
+        }
+      };
+      await writer.connect();
+      await viewer.connect();
+      final nonce =
+          'aaaaaaaa-aaaa-aaaa-aaaa-${DateTime.now().microsecondsSinceEpoch.toRadixString(16).padLeft(12, '0').substring(0, 12)}';
+      final bytes = Uint8List.fromList(utf8.encode('Tài liệu kiểm thử TV3'));
+      final sent = await author.sendChannelMessage(
+        group.id,
+        channel.id,
+        'Tài liệu ôn tập',
+        nonce,
+        files: [ChatUpload('notes.txt', bytes)],
+      );
+      final delivered = await received.future.timeout(
+        const Duration(seconds: 10),
+      );
+      expect(delivered.id, sent.id);
+      expect(delivered.attachments.single.fileName, 'notes.txt');
+      expect(await reader.downloadFile(delivered.attachments.single), bytes);
+      expect(
+        (await author.sendChannelMessage(
+          group.id,
+          channel.id,
+          'Tài liệu ôn tập',
+          nonce,
+        )).id,
+        sent.id,
+      );
+      final response = await reader.sendChannelMessage(
+        group.id,
+        channel.id,
+        'Đã nhận',
+        'bbbbbbbb-bbbb-bbbb-bbbb-${nonce.substring(nonce.length - 12)}',
+        replyToId: sent.id,
+      );
+      expect(response.reply!.id, sent.id);
+      await author.editMessage(
+        group.id,
+        channel.id,
+        sent.id,
+        'Tài liệu đã cập nhật',
+      );
+      expect(
+        (await updated.future.timeout(const Duration(seconds: 10))).content,
+        'Tài liệu đã cập nhật',
+      );
+      final reacted = await reader.react(
+        group.id,
+        channel.id,
+        sent.id,
+        '👍',
+        true,
+      );
+      expect(reacted.reactions.single.emoji, '👍');
+      await reader.readChannel(group.id, channel.id, response.id);
+      expect(
+        (await reader.channels(
+          group.id,
+        )).singleWhere((item) => item.id == channel.id).unreadCount,
+        0,
+      );
+      await author.deleteMessage(group.id, channel.id, sent.id);
+      expect(
+        (await reader.channelMessages(group.id, channel.id)).first.isDeleted,
+        true,
       );
     },
     skip: skip,

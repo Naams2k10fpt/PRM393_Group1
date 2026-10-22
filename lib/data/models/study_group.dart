@@ -154,6 +154,22 @@ class GroupInvitePreview {
 }
 
 class ChatMessage {
+  ChatMessage._withReply(ChatMessage source, this.reply)
+    : id = source.id,
+      groupId = source.groupId,
+      senderUserId = source.senderUserId,
+      senderName = source.senderName,
+      senderAvatarUrl = source.senderAvatarUrl,
+      content = source.content,
+      sentAt = source.sentAt,
+      kind = source.kind,
+      channelId = source.channelId,
+      revision = source.revision,
+      editedAt = source.editedAt,
+      deletedAt = source.deletedAt,
+      attachments = source.attachments,
+      reactions = source.reactions;
+  ChatMessage withReply(ChatReply reply) => ChatMessage._withReply(this, reply);
   ChatMessage.fromJson(Map<String, dynamic> json)
     : id = json['id'] as int,
       groupId = json['groupId'] as int,
@@ -162,6 +178,31 @@ class ChatMessage {
       senderAvatarUrl = json['senderAvatarUrl'] as String?,
       content = json['content'] as String,
       sentAt = DateTime.parse(json['sentAt'] as String),
+      channelId = json['channelId'] as int? ?? 0,
+      revision = json['revision'] as int? ?? 0,
+      editedAt = DateTime.tryParse(json['editedAt'] as String? ?? ''),
+      deletedAt = DateTime.tryParse(json['deletedAt'] as String? ?? ''),
+      reply =
+          json['reply'] is Map
+              ? ChatReply.fromJson(
+                Map<String, dynamic>.from(json['reply'] as Map),
+              )
+              : null,
+      attachments =
+          ((json['attachments'] as List?) ?? [])
+              .map(
+                (item) =>
+                    ChatFile.fromJson(Map<String, dynamic>.from(item as Map)),
+              )
+              .toList(),
+      reactions =
+          ((json['reactions'] as List?) ?? [])
+              .map(
+                (item) => ChatReaction.fromJson(
+                  Map<String, dynamic>.from(item as Map),
+                ),
+              )
+              .toList(),
       kind = json['kind'] as int;
   final int id;
   final int groupId;
@@ -171,4 +212,66 @@ class ChatMessage {
   final String content;
   final DateTime sentAt;
   final int kind;
+  final int channelId, revision;
+  final DateTime? editedAt, deletedAt;
+  final ChatReply? reply;
+  final List<ChatFile> attachments;
+  final List<ChatReaction> reactions;
+  bool get isDeleted => deletedAt != null;
+}
+
+class ChatChannel {
+  ChatChannel.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      groupId = json['groupId'] as int,
+      name = json['name'] as String,
+      topic = json['topic'] as String?,
+      isDefault = json['isDefault'] as bool,
+      unreadCount = json['unreadCount'] as int? ?? 0;
+  final int id, groupId;
+  final String name;
+  final String? topic;
+  final bool isDefault;
+  int unreadCount;
+}
+
+class ChatReply {
+  ChatReply.fromMessage(ChatMessage message)
+    : id = message.id,
+      senderName = message.senderName,
+      content = message.isDeleted ? 'Tin nhắn đã bị xóa' : message.content,
+      isDeleted = message.isDeleted,
+      revision = message.revision;
+  ChatReply.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      senderName = json['senderName'] as String,
+      content = json['content'] as String,
+      isDeleted = json['isDeleted'] as bool,
+      revision = json['revision'] as int? ?? 0;
+  final int id;
+  final int revision;
+  final String senderName, content;
+  final bool isDeleted;
+}
+
+class ChatFile {
+  ChatFile.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as String,
+      fileName = json['fileName'] as String,
+      contentType = json['contentType'] as String,
+      size = json['size'] as int;
+  final String id, fileName, contentType;
+  final int size;
+  bool get isImage => contentType.startsWith('image/');
+  String get sizeLabel =>
+      size >= 1024 * 1024
+          ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
+          : '${(size / 1024).ceil()} KB';
+}
+
+class ChatReaction {
+  ChatReaction.fromJson(Map<String, dynamic> json)
+    : emoji = json['emoji'] as String,
+      userId = json['userId'] as String;
+  final String emoji, userId;
 }
