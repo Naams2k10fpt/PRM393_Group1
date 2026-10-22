@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Team colour tokens, aligned with the web app's site.css (dark theme).
+/// Team colour tokens, aligned with the web app's site.css (AuthKit Midnight Cathedral).
 class AppDarkColors {
   AppDarkColors._();
 
-  static const Color background = Color(0xFF0B1120);
-  static const Color surface = Color(0xFF111827);
-  static const Color elevated = Color(0xFF1C2A3E);
-  static const Color border = Color(0x1FFFFFFF);
+  static const Color background = Color(0xFF05060F); // Midnight Canvas
+  static const Color surface = Color(0xFF111827);    // Deep Glass Base
+  static const Color elevated = Color(0xFF161C28);   // Elevated Glass Plate
+  static const Color border = Color(0x1FBad7F7);     // Glass Edge Hairline
 
-  static const Color textPrimary = Color(0xFFE2E8F0);
-  static const Color textMuted = Color(0xFFA8B8CC);
+  static const Color textPrimary = Color(0xFFD1E4FA); // Frost Glow
+  static const Color textMuted = Color(0xFFC7D3EA);   // Moon Mist
 
-  static const Color accent = Color(0xFF7C6DF8);
-  static const Color cyan = Color(0xFF22D3EE);
+  static const Color accent = Color(0xFF663AF3); // Void Violet CTA
+  static const Color cyan = Color(0xFF38BDF8);   // Blueprint Blue / Cyan Glow
 
   static const Color success = Color(0xFF34D399);
   static const Color danger = Color(0xFFF87171);
