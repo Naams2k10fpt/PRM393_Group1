@@ -171,6 +171,8 @@ void main() {
     await tester.tap(find.text('Tin nhắn cũ hơn'));
     await tester.pumpAndSettle();
     expect(repo.calls, contains('messages:1:10'));
+    await tester.drag(list, const Offset(0, 10000));
+    await tester.pumpAndSettle();
     expect(find.text('Tin nhắn 1'), findsOneWidget);
     expect(find.text('Tin nhắn cũ hơn'), findsNothing);
   });

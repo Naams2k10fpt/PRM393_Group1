@@ -7,6 +7,8 @@ import '../models/study_group.dart';
 /// One room connection, owned by the room screen and replaceable in tests.
 abstract class ChatConnection {
   void Function(ChatMessage)? onMessage;
+  void Function(ChatMessage)? onMessageUpdated;
+  Future<void> Function()? onChannelsChanged;
   Future<void> Function()? onReconnected;
   void Function()? onDisconnected;
   void Function()? onAccessRevoked;
@@ -38,6 +40,21 @@ class SignalRChatConnection extends ChatConnection {
         Map<String, dynamic>.from(args.first as Map),
       );
       if (message.groupId == groupId) onMessage?.call(message);
+    });
+    _hub.on('MessageUpdated', (args) {
+      final data = _payload(args);
+      if (data != null && data['groupId'] == groupId) {
+        onMessageUpdated?.call(ChatMessage.fromJson(data));
+      }
+    });
+    _hub.on('ChannelsChanged', (args) async {
+      if (!_closed && args?.firstOrNull == groupId) {
+        try {
+          await onChannelsChanged?.call();
+        } catch (error) {
+          if (!_closed) onError?.call(error);
+        }
+      }
     });
     _hub.on('GroupAccessRevoked', (args) {
       if (!_closed && args?.isNotEmpty == true && args!.first == groupId) {
@@ -169,6 +186,8 @@ class SignalRChatConnection extends ChatConnection {
   Future<void> close() async {
     _closed = true;
     onMessage = null;
+    onMessageUpdated = null;
+    onChannelsChanged = null;
     onReconnected = null;
     onDisconnected = null;
     onAccessRevoked = null;

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import '../api/api_client.dart';
 import '../models/study_group.dart';
 export '../models/study_group.dart';
@@ -59,6 +61,134 @@ class GroupsRepository {
   Future<void> markRead(int id, int messageId) async {
     await api.post('/api/groups/$id/read', data: {'lastMessageId': messageId});
   }
+
+  Future<List<ChatChannel>> channels(int id) async =>
+      (await api.get('/api/groups/$id/channels') as List)
+          .map(
+            (item) =>
+                ChatChannel.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
+          .toList();
+
+  Future<void> saveChannel(
+    int id,
+    String name,
+    String topic, {
+    int? channelId,
+  }) async {
+    final data = {'name': name.trim(), 'topic': topic.trim()};
+    if (channelId == null) {
+      await api.post('/api/groups/$id/channels', data: data);
+    } else {
+      await api.put('/api/groups/$id/channels/$channelId', data: data);
+    }
+  }
+
+  Future<void> archiveChannel(int id, int channelId) async {
+    await api.delete('/api/groups/$id/channels/$channelId');
+  }
+
+  Future<List<ChatMessage>> channelMessages(
+    int id,
+    int channelId, {
+    int? beforeId,
+    int? afterId,
+  }) async =>
+      (await api.get(
+                '/api/groups/$id/channels/$channelId/messages',
+                query: {
+                  'limit': 30,
+                  if (beforeId != null) 'beforeId': beforeId,
+                  if (afterId != null) 'afterId': afterId,
+                },
+              )
+              as List)
+          .map(
+            (item) =>
+                ChatMessage.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
+          .toList();
+
+  Future<ChatMessage> sendChannelMessage(
+    int id,
+    int channelId,
+    String content,
+    String nonce, {
+    int? replyToId,
+    List<ChatUpload> files = const [],
+  }) async => ChatMessage.fromJson(
+    Map<String, dynamic>.from(
+      await api.postMultipart(
+            '/api/groups/$id/channels/$channelId/messages',
+            FormData.fromMap({
+              'content': content,
+              'clientMessageId': nonce,
+              if (replyToId != null) 'replyToId': replyToId,
+              'files':
+                  files
+                      .map(
+                        (file) => MultipartFile.fromBytes(
+                          file.bytes,
+                          filename: file.name,
+                        ),
+                      )
+                      .toList(),
+            }),
+          )
+          as Map,
+    ),
+  );
+
+  Future<ChatMessage> editMessage(
+    int id,
+    int channelId,
+    int messageId,
+    String content,
+  ) async => ChatMessage.fromJson(
+    Map<String, dynamic>.from(
+      await api.put(
+            '/api/groups/$id/channels/$channelId/messages/$messageId',
+            data: {'content': content},
+          )
+          as Map,
+    ),
+  );
+  Future<ChatMessage> deleteMessage(
+    int id,
+    int channelId,
+    int messageId,
+  ) async => ChatMessage.fromJson(
+    Map<String, dynamic>.from(
+      await api.delete(
+            '/api/groups/$id/channels/$channelId/messages/$messageId',
+          )
+          as Map,
+    ),
+  );
+  Future<ChatMessage> react(
+    int id,
+    int channelId,
+    int messageId,
+    String emoji,
+    bool active,
+  ) async => ChatMessage.fromJson(
+    Map<String, dynamic>.from(
+      await api.put(
+            '/api/groups/$id/channels/$channelId/messages/$messageId/reaction',
+            data: {'emoji': emoji, 'active': active},
+          )
+          as Map,
+    ),
+  );
+  Future<void> readChannel(int id, int channelId, int messageId) async {
+    await api.post(
+      '/api/groups/$id/channels/$channelId/read',
+      data: {'lastMessageId': messageId},
+    );
+  }
+
+  Future<Uint8List> downloadFile(ChatFile file) =>
+      api.download('/api/chat/attachments/${file.id}');
 
   Future<GroupOptions> options() async => GroupOptions.fromJson(
     await api.get('/api/groups/options') as Map<String, dynamic>,
@@ -163,4 +293,10 @@ class GroupsRepository {
       (await api.post('/api/groups/invite/${Uri.encodeComponent(token)}')
               as Map<String, dynamic>)['id']
           as int;
+}
+
+class ChatUpload {
+  const ChatUpload(this.name, this.bytes);
+  final String name;
+  final Uint8List bytes;
 }
