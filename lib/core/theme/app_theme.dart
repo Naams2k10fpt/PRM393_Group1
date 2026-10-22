@@ -30,7 +30,7 @@ class AppLightColors {
   static const Color border = Color(0x1A0F172A);
 
   static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textMuted = Color(0xFF64748B);
+  static const Color textMuted = Color(0xFF475569); // High-contrast Slate-600
 
   static const Color accent = Color(0xFF6366F1);
   static const Color cyan = Color(0xFF0284C7);
@@ -42,6 +42,17 @@ class AppLightColors {
 
 /// Backward compatibility alias so existing code keeps compiling seamlessly.
 typedef AppColors = AppDarkColors;
+
+/// Extension to easily fetch theme-aware colors from BuildContext.
+extension AppThemeContextExtension on BuildContext {
+  bool get isDark => Theme.of(this).brightness == Brightness.dark;
+  Color get textPrimaryColor => isDark ? AppDarkColors.textPrimary : AppLightColors.textPrimary;
+  Color get textMutedColor => isDark ? AppDarkColors.textMuted : AppLightColors.textMuted;
+  Color get surfaceColor => isDark ? AppDarkColors.surface : AppLightColors.surface;
+  Color get elevatedColor => isDark ? AppDarkColors.elevated : AppLightColors.elevated;
+  Color get accentColor => isDark ? AppDarkColors.accent : AppLightColors.accent;
+  Color get cyanColor => isDark ? AppDarkColors.cyan : AppLightColors.cyan;
+}
 
 /// App-wide theme. Feature screens use Theme.of(context) instead of hard-coded colours;
 /// only the Kahoot screens keep their own KahootColors palette.
@@ -68,6 +79,7 @@ class AppTheme {
       surface: AppDarkColors.surface,
       error: AppDarkColors.danger,
       onSurface: AppDarkColors.textPrimary,
+      onSurfaceVariant: AppDarkColors.textMuted,
     );
 
     final inputBorder = OutlineInputBorder(
@@ -78,9 +90,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppDarkColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppDarkColors.background,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppDarkColors.textPrimary,
         elevation: 0,
         centerTitle: true,
@@ -142,6 +154,7 @@ class AppTheme {
       surface: AppLightColors.surface,
       error: AppLightColors.danger,
       onSurface: AppLightColors.textPrimary,
+      onSurfaceVariant: AppLightColors.textMuted,
     );
 
     final inputBorder = OutlineInputBorder(
@@ -152,9 +165,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppLightColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppLightColors.background,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppLightColors.textPrimary,
         elevation: 0,
         centerTitle: true,

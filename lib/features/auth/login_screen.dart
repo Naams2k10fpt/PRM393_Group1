@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/academic_ambient_background.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -75,17 +74,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final error = _error;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AcademicAmbientBackground()),
-          SafeArea(
-            child: Form(
-              key: _form,
-              child: AutofillGroup(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
-                  children: [
-                const Icon(Icons.school_rounded, size: 64, color: AppColors.accent),
+      body: SafeArea(
+        child: Form(
+          key: _form,
+          child: AutofillGroup(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+              children: [
+                Icon(Icons.school_rounded, size: 64, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 12),
                 Text(
                   'Đăng nhập',
@@ -153,9 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-    ],
-  ),
-);
+    );
   }
 }
 

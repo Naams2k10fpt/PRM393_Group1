@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/academic_ambient_background.dart';
 import 'data/api/api_client.dart';
 import 'data/api/token_storage.dart';
 import 'data/repositories/auth_repository.dart';
@@ -96,6 +97,14 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
             darkTheme: AppTheme.dark(),
             themeMode: themeMode,
             routerConfig: _router,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  const Positioned.fill(child: AcademicAmbientBackground()),
+                  if (child != null) child,
+                ],
+              );
+            },
           );
         },
       ),

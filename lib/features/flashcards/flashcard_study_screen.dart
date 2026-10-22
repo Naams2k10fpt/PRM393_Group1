@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/academic_ambient_background.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/flashcard.dart';
@@ -135,12 +134,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.deckTitle ?? _session?.deckName ?? 'Học thẻ')),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AcademicAmbientBackground()),
-          SafeArea(child: _body()),
-        ],
-      ),
+      body: SafeArea(child: _body()),
     );
   }
 
@@ -176,13 +170,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             Icon(
               hasCardsNotDue ? Icons.check_circle_outline : Icons.style_outlined,
               size: 44,
-              color: hasCardsNotDue ? AppColors.success : AppColors.textMuted,
+              color: hasCardsNotDue ? AppColors.success : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
             Text(
               hasCardsNotDue ? 'Bạn đã ôn hết thẻ đến hạn hôm nay.' : 'Bộ đề này chưa có thẻ nào.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textMuted),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             if (hasCardsNotDue) ...[
               const SizedBox(height: 20),
@@ -202,6 +196,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     final card = _cards[_index];
     final total = _cards.length;
     final answer = card.answerText;
+    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -217,7 +212,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   child: LinearProgressIndicator(
                     value: _index / total,
                     minHeight: 8,
-                    backgroundColor: AppColors.elevated,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
@@ -250,7 +245,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                       text: answer.isEmpty ? '(Chưa có đáp án)' : answer,
                       caption: 'Đáp án',
                       footnote: card.correctAnswers.isEmpty ? null : card.explanation,
-                      accent: AppColors.cyan,
+                      accent: theme.colorScheme.secondary,
                     ),
                   ),
                 ),
@@ -258,10 +253,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Chạm vào thẻ để lật · vuốt sang hai bên để đánh dấu',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 12),
           Row(
@@ -282,7 +277,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.success,
-                    foregroundColor: AppColors.background,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(48),
                   ),
                   onPressed: () => _answer(true),
@@ -309,7 +304,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         Text(
           'Bạn đã học hết $_answered thẻ.',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textMuted),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 24),
         Row(
@@ -396,7 +391,7 @@ class _ScoreTile extends StatelessWidget {
         children: [
           Text('$value', style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
         ],
       ),
     );

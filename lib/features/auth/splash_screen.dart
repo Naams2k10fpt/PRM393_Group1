@@ -21,16 +21,16 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.school_rounded, size: 72, color: AppColors.accent),
+              Icon(Icons.school_rounded, size: 72, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 16),
               Text('Quiz Management', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 32),
               if (error == null) ...[
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Đang kết nối máy chủ…',
-                  style: TextStyle(color: AppColors.textMuted),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ] else ...[
                 Text(error.message, textAlign: TextAlign.center),

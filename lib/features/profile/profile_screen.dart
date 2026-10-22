@@ -27,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
           Center(child: UserAvatar(user: user, radius: 44)),
           const SizedBox(height: 12),
           Text(user.username, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
-          Text(user.email, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textMuted)),
+          Text(user.email, textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 24),
           Card(
             child: Column(
@@ -80,7 +80,7 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 24),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.danger,
+              foregroundColor: Theme.of(context).colorScheme.error,
               minimumSize: const Size.fromHeight(48),
             ),
             onPressed: () => context.read<AuthController>().logout(),
@@ -109,7 +109,7 @@ class UserAvatar extends StatelessWidget {
     final url = user.avatarUrl;
     return CircleAvatar(
       radius: radius,
-      backgroundColor: AppColors.accent,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       foregroundImage: url == null ? null : NetworkImage(url),
       // A broken avatar URL just shows the initial.
       onForegroundImageError: url == null ? null : (_, _) {},

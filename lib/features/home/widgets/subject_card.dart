@@ -15,6 +15,8 @@ class SubjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final description = subject.description;
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -28,10 +30,10 @@ class SubjectCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.16),
+                  color: colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.menu_book_outlined, color: AppColors.accent, size: 22),
+                child: Icon(Icons.menu_book_outlined, color: colorScheme.primary, size: 22),
               ),
               const SizedBox(height: 12),
               Text(
@@ -46,13 +48,13 @@ class SubjectCard extends StatelessWidget {
                   description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
                 ),
               ],
               const Spacer(),
               Text(
                 subject.deckCount == 0 ? 'Chưa có bộ đề' : '${subject.deckCount} bộ đề',
-                style: const TextStyle(color: AppColors.cyan, fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(color: colorScheme.secondary, fontSize: 13, fontWeight: FontWeight.w600),
               ),
             ],
           ),

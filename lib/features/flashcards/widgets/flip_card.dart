@@ -95,14 +95,23 @@ class CardFace extends StatelessWidget {
   Widget build(BuildContext context) {
     final caption = this.caption;
     final footnote = this.footnote;
+    final theme = Theme.of(context);
+    final cardBg = theme.cardTheme.color ?? theme.colorScheme.surface;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: accent.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +128,12 @@ class CardFace extends StatelessWidget {
               child: Text(
                 text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, height: 1.35),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ),
@@ -128,7 +142,11 @@ class CardFace extends StatelessWidget {
             Text(
               footnote,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 14, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ],

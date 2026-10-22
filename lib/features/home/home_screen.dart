@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/academic_ambient_background.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/subject.dart';
@@ -83,29 +82,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
         ],
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AcademicAmbientBackground()),
-          RefreshIndicator(
-            onRefresh: _load,
-            child: ListView(
-              // Always scrollable, so pull-to-refresh works even when the list is
-              // short or an error left it empty.
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (user != null) ...[
-                  Text(
-                    'Chào ${user.username}',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Hôm nay học gì nào?',
-                    style: TextStyle(color: AppColors.textMuted),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          // Always scrollable, so pull-to-refresh works even when the list is
+          // short or an error left it empty.
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (user != null) ...[
+              Text(
+                'Chào ${user.username}',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Hôm nay học gì nào?',
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 20),
+            ],
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.sports_esports_outlined),
@@ -140,9 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        ],
-      ),
-    );
+        );
   }
 
   List<Widget> _subjectSection() {
@@ -166,18 +160,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_subjects.isEmpty) {
-      return const [
+      return [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 48),
-          child: Column(
-            children: [
-              Icon(Icons.inbox_outlined, size: 40, color: AppColors.textMuted),
-              SizedBox(height: 12),
-              Text(
-                'Chưa có môn học nào.',
-                style: TextStyle(color: AppColors.textMuted),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(vertical: 48),
+          child: Builder(
+            builder: (context) {
+              final color = Theme.of(context).colorScheme.onSurfaceVariant;
+              return Column(
+                children: [
+                  Icon(Icons.inbox_outlined, size: 40, color: color),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Chưa có môn học nào.',
+                    style: TextStyle(color: color),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ];

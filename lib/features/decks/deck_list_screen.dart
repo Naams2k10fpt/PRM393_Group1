@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/academic_ambient_background.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/deck.dart';
@@ -59,12 +58,7 @@ class _DeckListScreenState extends State<DeckListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.subjectName ?? 'Bộ đề')),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AcademicAmbientBackground()),
-          RefreshIndicator(onRefresh: _load, child: _body()),
-        ],
-      ),
+      body: RefreshIndicator(onRefresh: _load, child: _body()),
     );
   }
 
@@ -85,17 +79,19 @@ class _DeckListScreenState extends State<DeckListScreen> {
       );
     }
 
+    final variantColor = Theme.of(context).colorScheme.onSurfaceVariant;
+
     if (_decks.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 16),
-        children: const [
-          Icon(Icons.inbox_outlined, size: 40, color: AppColors.textMuted),
-          SizedBox(height: 12),
+        children: [
+          Icon(Icons.inbox_outlined, size: 40, color: variantColor),
+          const SizedBox(height: 12),
           Text(
             'Môn học này chưa có bộ đề nào.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textMuted),
+            style: TextStyle(color: variantColor),
           ),
         ],
       );
@@ -117,7 +113,7 @@ class _DeckListScreenState extends State<DeckListScreen> {
             title: Text(deck.title),
             subtitle: Text(
               _subtitleFor(deck),
-              style: const TextStyle(color: AppColors.textMuted),
+              style: TextStyle(color: variantColor),
             ),
             trailing: PopupMenuButton<String>(
               tooltip: 'Học với bộ đề',

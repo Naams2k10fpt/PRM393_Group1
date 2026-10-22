@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/repositories/quiz_repository.dart';
 import '../../data/api/api_exception.dart';
 import '../auth/auth_controller.dart';
-import '../../core/widgets/academic_ambient_background.dart';
 import 'quiz_content.dart';
 import 'report_question_dialog.dart';
 
@@ -364,18 +363,13 @@ class _QuizScreenState extends State<QuizScreen> {
               : 'Quiz cá nhân',
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AcademicAmbientBackground()),
-          busy && attempt == null && result == null
-              ? const Center(child: CircularProgressIndicator())
-              : result != null
-              ? _resultView()
-              : attempt != null
-              ? _attemptView()
-              : _entryView(),
-        ],
-      ),
+      body: busy && attempt == null && result == null
+          ? const Center(child: CircularProgressIndicator())
+          : result != null
+          ? _resultView()
+          : attempt != null
+          ? _attemptView()
+          : _entryView(),
     );
   }
 
