@@ -173,20 +173,24 @@ class _AcademicBackgroundPainter extends CustomPainter {
     if (showRunes && size.width > 200 && size.height > 200) {
       final runes = isDark
           ? [
-              _RuneSpec('✦', Offset(size.width * 0.88, size.height * 0.08), 16, const Color(0xFFFBBF24).withValues(alpha: 0.25)),
-              _RuneSpec('∑', Offset(size.width * 0.12, size.height * 0.18), 22, const Color(0xFF7C6DF8).withValues(alpha: 0.18)),
-              _RuneSpec('λ', Offset(size.width * 0.82, size.height * 0.42), 20, const Color(0xFF22D3EE).withValues(alpha: 0.15)),
-              _RuneSpec('π', Offset(size.width * 0.08, size.height * 0.62), 20, const Color(0xFF34D399).withValues(alpha: 0.14)),
-              _RuneSpec('⚡', Offset(size.width * 0.92, size.height * 0.88), 16, const Color(0xFFFBBF24).withValues(alpha: 0.20)),
-              _RuneSpec('?', Offset(size.width * 0.25, size.height * 0.85), 24, const Color(0xFF7C6DF8).withValues(alpha: 0.12)),
+              _RuneSpec('∫', Offset(size.width * 0.88, size.height * 0.08), 22, const Color(0xFF22D3EE).withValues(alpha: 0.22)),
+              _RuneSpec('∑', Offset(size.width * 0.12, size.height * 0.18), 22, const Color(0xFF7C6DF8).withValues(alpha: 0.22)),
+              _RuneSpec('λ', Offset(size.width * 0.82, size.height * 0.42), 20, const Color(0xFF22D3EE).withValues(alpha: 0.20)),
+              _RuneSpec('π', Offset(size.width * 0.08, size.height * 0.62), 20, const Color(0xFF34D399).withValues(alpha: 0.20)),
+              _RuneSpec('√x', Offset(size.width * 0.90, size.height * 0.86), 18, const Color(0xFFFBBF24).withValues(alpha: 0.22)),
+              _RuneSpec('Δ', Offset(size.width * 0.22, size.height * 0.85), 20, const Color(0xFF7C6DF8).withValues(alpha: 0.20)),
+              _RuneSpec('∞', Offset(size.width * 0.50, size.height * 0.09), 22, const Color(0xFFA78BFA).withValues(alpha: 0.18)),
+              _RuneSpec('∂', Offset(size.width * 0.52, size.height * 0.92), 22, const Color(0xFF38BDF8).withValues(alpha: 0.18)),
             ]
           : [
-              _RuneSpec('✦', Offset(size.width * 0.88, size.height * 0.08), 16, const Color(0xFFD97706).withValues(alpha: 0.25)),
+              _RuneSpec('∫', Offset(size.width * 0.88, size.height * 0.08), 22, const Color(0xFF0284C7).withValues(alpha: 0.22)),
               _RuneSpec('∑', Offset(size.width * 0.12, size.height * 0.18), 22, const Color(0xFF6366F1).withValues(alpha: 0.22)),
               _RuneSpec('λ', Offset(size.width * 0.82, size.height * 0.42), 20, const Color(0xFF0284C7).withValues(alpha: 0.20)),
               _RuneSpec('π', Offset(size.width * 0.08, size.height * 0.62), 20, const Color(0xFF16A34A).withValues(alpha: 0.20)),
-              _RuneSpec('⚡', Offset(size.width * 0.92, size.height * 0.88), 16, const Color(0xFFD97706).withValues(alpha: 0.22)),
-              _RuneSpec('?', Offset(size.width * 0.25, size.height * 0.85), 24, const Color(0xFF6366F1).withValues(alpha: 0.16)),
+              _RuneSpec('√x', Offset(size.width * 0.90, size.height * 0.86), 18, const Color(0xFFD97706).withValues(alpha: 0.22)),
+              _RuneSpec('Δ', Offset(size.width * 0.22, size.height * 0.85), 20, const Color(0xFF6366F1).withValues(alpha: 0.20)),
+              _RuneSpec('∞', Offset(size.width * 0.50, size.height * 0.09), 22, const Color(0xFF8B5CF6).withValues(alpha: 0.18)),
+              _RuneSpec('∂', Offset(size.width * 0.52, size.height * 0.92), 22, const Color(0xFF0284C7).withValues(alpha: 0.18)),
             ];
 
       for (final r in runes) {
@@ -196,8 +200,9 @@ class _AcademicBackgroundPainter extends CustomPainter {
             style: TextStyle(
               fontSize: r.size,
               fontWeight: FontWeight.w600,
+              fontStyle: FontStyle.italic,
               color: r.color,
-              fontFamily: 'monospace',
+              fontFamily: 'serif',
             ),
           ),
           textDirection: TextDirection.ltr,
