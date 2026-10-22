@@ -285,7 +285,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: accessMode ?? -1,
+                    value: accessMode ?? -1,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Quyền tham gia',
@@ -305,7 +305,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    initialValue: subjectId ?? -1,
+                    value: subjectId ?? -1,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Môn học'),
                     items: [
@@ -327,7 +327,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    initialValue: sort,
+                    value: sort,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Sắp xếp'),
                     items: const [
@@ -519,7 +519,7 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
                 decoration: const InputDecoration(labelText: 'Mô tả'),
               ),
               DropdownButtonFormField<int>(
-                initialValue: -1,
+                value: -1,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Môn học của bạn'),
                 items: [
@@ -540,7 +540,7 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
-                initialValue: mode,
+                value: mode,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Quyền tham gia'),
                 items: const [

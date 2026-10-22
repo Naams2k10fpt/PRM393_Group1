@@ -57,7 +57,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: Color(0x2E818CF8), width: 1.0),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

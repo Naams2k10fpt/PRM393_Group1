@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/academic_ambient_background.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/deck.dart';
@@ -58,7 +59,12 @@ class _DeckListScreenState extends State<DeckListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.subjectName ?? 'Bộ đề')),
-      body: RefreshIndicator(onRefresh: _load, child: _body()),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AcademicAmbientBackground()),
+          RefreshIndicator(onRefresh: _load, child: _body()),
+        ],
+      ),
     );
   }
 

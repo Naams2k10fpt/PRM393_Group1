@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/repositories/quiz_repository.dart';
 import '../../data/api/api_exception.dart';
 import '../auth/auth_controller.dart';
+import '../../core/widgets/academic_ambient_background.dart';
 import 'quiz_content.dart';
 import 'report_question_dialog.dart';
 
@@ -363,7 +364,9 @@ class _QuizScreenState extends State<QuizScreen> {
               : 'Quiz cá nhân',
         ),
       ),
-      body:
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AcademicAmbientBackground()),
           busy && attempt == null && result == null
               ? const Center(child: CircularProgressIndicator())
               : result != null
@@ -371,6 +374,8 @@ class _QuizScreenState extends State<QuizScreen> {
               : attempt != null
               ? _attemptView()
               : _entryView(),
+        ],
+      ),
     );
   }
 
@@ -397,7 +402,7 @@ class _QuizScreenState extends State<QuizScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
           isExpanded: true,
-          initialValue: subjectId,
+          value: subjectId,
           decoration: const InputDecoration(labelText: 'Môn học'),
           items:
               subjects
@@ -411,7 +416,7 @@ class _QuizScreenState extends State<QuizScreen> {
         DropdownButtonFormField<int>(
           isExpanded: true,
           key: ValueKey(subjectId),
-          initialValue: deck?.id,
+          value: deck?.id,
           decoration: const InputDecoration(labelText: 'Bộ đề'),
           items:
               decks
@@ -631,6 +636,15 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         for (var i = 0; i < data.questions.length; i++)
           Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: data.questions[i].isCorrect
+                    ? const Color(0x5534D399)
+                    : const Color(0x55F87171),
+                width: 1.2,
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

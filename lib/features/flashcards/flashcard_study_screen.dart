@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/academic_ambient_background.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/flashcard.dart';
@@ -134,7 +135,12 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.deckTitle ?? _session?.deckName ?? 'Học thẻ')),
-      body: SafeArea(child: _body()),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: AcademicAmbientBackground()),
+          SafeArea(child: _body()),
+        ],
+      ),
     );
   }
 
