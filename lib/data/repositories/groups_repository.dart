@@ -64,6 +64,8 @@ class GroupsRepository {
 
   Future<List<ChatChannel>> channels(int id) async =>
       (await api.get('/api/groups/$id/channels') as List)
+          // Voice/video currently runs in the web room. Keep mobile text routing compatible.
+          .where((item) => ((item as Map)['kind'] as int? ?? 0) == 0)
           .map(
             (item) =>
                 ChatChannel.fromJson(Map<String, dynamic>.from(item as Map)),
