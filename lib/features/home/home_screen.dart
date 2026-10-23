@@ -92,26 +92,62 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (user != null) ...[
-              Text(
-                'Chào ${user.username}',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Hôm nay học gì nào?',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 20),
-            ],
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.sports_esports_outlined),
-                    title: const Text('Kahoot Live'),
-                    subtitle: const Text('Nhập mã PIN hoặc quét QR để vào phòng'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push(AppRoutes.kahoot),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Chào ${user.username}',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Hôm nay học gì nào?',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0x1AF59E0B),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0x4DF59E0B)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🔥', style: TextStyle(fontSize: 14)),
+                        SizedBox(width: 4),
+                        Text(
+                          '5 ngày',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+            ],
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.sports_esports_outlined, color: Color(0xFF663AF3)),
+                title: const Text('Kahoot Live'),
+                subtitle: const Text('Nhập mã PIN hoặc quét QR để vào phòng'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.kahoot),
+              ),
+            ),
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.quiz_outlined),
