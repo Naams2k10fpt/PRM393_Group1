@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final isDark = mode == ThemeMode.dark;
               return IconButton(
                 tooltip: isDark ? 'Chế độ Sáng' : 'Chế độ Tối',
-                icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                icon: Icon(isDark ? RadixIcons.Sun : RadixIcons.Moon),
                 onPressed: AppTheme.toggleTheme,
               );
             },
@@ -122,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('🔥', style: TextStyle(fontSize: 14)),
+                        Icon(LucideIcons.flame, size: 14, color: Color(0xFFF59E0B)),
                         SizedBox(width: 4),
                         Text(
                           '5 ngày',
@@ -141,28 +143,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
             Card(
               child: ListTile(
-                leading: const Icon(Icons.sports_esports_outlined, color: Color(0xFF663AF3)),
+                leading: const Icon(LucideIcons.gamepad2, color: Color(0xFF663AF3)),
                 title: const Text('Kahoot Live'),
                 subtitle: const Text('Nhập mã PIN hoặc quét QR để vào phòng'),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: const Icon(RadixIcons.Chevron_Right),
                 onTap: () => context.push(AppRoutes.kahoot),
               ),
             ),
                 Card(
                   child: ListTile(
-                    leading: const Icon(Icons.quiz_outlined),
+                    leading: const Icon(RadixIcons.Reader),
                     title: const Text('Quiz cá nhân'),
                     subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: const Icon(RadixIcons.Chevron_Right),
                     onTap: () => context.push(AppRoutes.quiz),
                   ),
                 ),
                 Card(
                   child: ListTile(
-                    leading: const Icon(Icons.forum_outlined),
+                    leading: const Icon(RadixIcons.Chat_Bubble),
                     title: const Text('Nhóm học'),
                     subtitle: const Text('Tham gia và trò chuyện thời gian thực'),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: const Icon(RadixIcons.Chevron_Right),
                     onTap: () => context.push(AppRoutes.groups),
                   ),
                 ),
@@ -205,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final color = Theme.of(context).colorScheme.onSurfaceVariant;
               return Column(
                 children: [
-                  Icon(Icons.inbox_outlined, size: 40, color: color),
+                  Icon(RadixIcons.Archive, size: 40, color: color),
                   const SizedBox(height: 12),
                   Text(
                     'Chưa có môn học nào.',

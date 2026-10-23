@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -54,13 +55,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             icon: ValueListenableBuilder<MobileScannerState>(
               valueListenable: _controller,
               builder: (context, state, child) {
-                return Icon(state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off);
+                return Icon(state.torchState == TorchState.on ? RadixIcons.Lightning_Bolt : RadixIcons.Cross_Circled);
               },
             ),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: const Icon(Icons.flip_camera_ios),
+            icon: const Icon(RadixIcons.Camera),
             onPressed: () => _controller.switchCamera(),
           ),
         ],

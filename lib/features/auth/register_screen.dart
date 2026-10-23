@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/widgets/brand_logo.dart';
@@ -175,7 +176,7 @@ class CheckEmailScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            Icon(Icons.mark_email_unread_outlined, size: 72, color: Theme.of(context).colorScheme.primary),
+            Icon(RadixIcons.Envelope_Closed, size: 72, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
             Text(args.message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),

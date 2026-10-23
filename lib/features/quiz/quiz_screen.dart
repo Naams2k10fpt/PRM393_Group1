@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/repositories/quiz_repository.dart';
@@ -528,7 +530,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         : null,
                 avatar:
                     selected[quiz.questions[i].id]?.isNotEmpty == true
-                        ? const Icon(Icons.check, size: 16)
+                        ? const Icon(RadixIcons.Check, size: 16)
                         : null,
                 onPressed: () => setState(() => questionIndex = i),
               ),
@@ -625,7 +627,7 @@ class _QuizScreenState extends State<QuizScreen> {
         if (data.deckId > 0)
           OutlinedButton.icon(
             onPressed: busy ? null : () => _begin(data.deckId, data.totalCount),
-            icon: const Icon(Icons.replay),
+            icon: const Icon(RadixIcons.Reset),
             label: Text(busy ? 'Đang tải...' : 'Làm lại bài quiz'),
           ),
         for (var i = 0; i < data.questions.length; i++)
@@ -663,10 +665,10 @@ class _QuizScreenState extends State<QuizScreen> {
                       children: [
                         Icon(
                           answer.isCorrect
-                              ? Icons.check_circle
+                              ? RadixIcons.Check_Circled
                               : answer.wasSelected
-                              ? Icons.cancel
-                              : Icons.circle_outlined,
+                              ? RadixIcons.Cross_Circled
+                              : RadixIcons.Circle,
                           size: 18,
                           color:
                               answer.isCorrect
@@ -687,12 +689,12 @@ class _QuizScreenState extends State<QuizScreen> {
                     QuizContent('Giải thích: ${data.questions[i].explanation}'),
                   if (data.historyId > 0 && data.questions[i].id > 0)
                     Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: () => _report(data, data.questions[i]),
-                        icon: const Icon(Icons.flag_outlined),
-                        label: const Text('Báo cáo câu hỏi'),
-                      ),
+                       alignment: Alignment.centerRight,
+                       child: TextButton.icon(
+                         onPressed: () => _report(data, data.questions[i]),
+                         icon: const Icon(LucideIcons.flag),
+                         label: const Text('Báo cáo câu hỏi'),
+                       ),
                     ),
                 ],
               ),

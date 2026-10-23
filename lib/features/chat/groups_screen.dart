@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/groups_repository.dart';
 import 'chat_room_screen.dart';
@@ -158,12 +159,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
         IconButton(
           tooltip: 'Tham gia bằng link mời',
           onPressed: _joinLink,
-          icon: const Icon(Icons.link),
+          icon: const Icon(RadixIcons.Link_2),
         ),
         IconButton(
           tooltip: 'Tạo nhóm',
           onPressed: loading ? null : _create,
-          icon: const Icon(Icons.add),
+          icon: const Icon(RadixIcons.Plus),
         ),
       ],
     ),
@@ -250,8 +251,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       child: ListTile(
                         leading: Icon(
                           group.accessMode == 2
-                              ? Icons.lock_outline
-                              : Icons.forum_outlined,
+                              ? RadixIcons.Lock_Closed
+                              : RadixIcons.Chat_Bubble,
                         ),
                         title: Text(group.name),
                         subtitle: Text(
@@ -261,9 +262,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             group.unreadCount > 0
                                 ? Badge(
                                   label: Text('${group.unreadCount}'),
-                                  child: const Icon(Icons.chevron_right),
+                                  child: const Icon(RadixIcons.Chevron_Right),
                                 )
-                                : const Icon(Icons.chevron_right),
+                                : const Icon(RadixIcons.Chevron_Right),
                         onTap: () => _open(group),
                       ),
                     ),
@@ -278,7 +279,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       suffixIcon: IconButton(
                         tooltip: 'Tìm kiếm',
                         onPressed: () => _find(),
-                        icon: const Icon(Icons.search),
+                        icon: const Icon(RadixIcons.Magnifying_Glass),
                       ),
                     ),
                     onSubmitted: (_) => _find(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/widgets/form_widgets.dart';
@@ -85,7 +86,7 @@ class _DeckListScreenState extends State<DeckListScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 16),
         children: [
-          Icon(Icons.inbox_outlined, size: 40, color: variantColor),
+          Icon(RadixIcons.Archive, size: 40, color: variantColor),
           const SizedBox(height: 12),
           Text(
             'Môn học này chưa có bộ đề nào.',

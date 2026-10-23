@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:radix_icons/radix_icons.dart';
 import '../../core/config/app_config.dart';
 import 'kahoot_colors.dart';
 import 'qr_scanner_screen.dart';
@@ -136,7 +138,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: KahootColors.textMuted),
+            icon: const Icon(RadixIcons.Gear, color: KahootColors.textMuted),
             tooltip: 'Cài đặt kết nối server',
             onPressed: _showSettingsDialog,
           ),
@@ -160,7 +162,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                     border: Border.all(color: KahootColors.accent.withValues(alpha: 0.3)),
                   ),
                   child: const Icon(
-                    Icons.sports_esports_rounded,
+                    LucideIcons.gamepad2,
                     color: KahootColors.accent,
                     size: 34,
                   ),
@@ -257,7 +259,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                             borderRadius: BorderRadius.circular(16),
                             borderSide: const BorderSide(color: KahootColors.cyan, width: 2),
                           ),
-                          prefixIcon: const Icon(Icons.tag_rounded, color: KahootColors.cyan),
+                          prefixIcon: const Icon(LucideIcons.hash, color: KahootColors.cyan),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -265,7 +267,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                       // Nút quét QR Code
                       OutlinedButton.icon(
                         onPressed: _openQrScanner,
-                        icon: const Icon(Icons.qr_code_scanner_rounded, color: KahootColors.cyan, size: 20),
+                        icon: const Icon(LucideIcons.qrCode, color: KahootColors.cyan, size: 20),
                         label: const Text(
                           'Quét mã QR từ Host',
                           style: TextStyle(
@@ -321,7 +323,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                             borderRadius: BorderRadius.circular(16),
                             borderSide: const BorderSide(color: KahootColors.accent, width: 2),
                           ),
-                          prefixIcon: const Icon(Icons.person_outline_rounded, color: KahootColors.accent),
+                          prefixIcon: const Icon(RadixIcons.Person, color: KahootColors.accent),
                         ),
                       ),
                       const SizedBox(height: 28),
@@ -355,7 +357,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.bolt_rounded, size: 22),
+                              Icon(RadixIcons.Lightning_Bolt, size: 22),
                               SizedBox(width: 8),
                               Flexible(
                                 child: Text(
@@ -380,7 +382,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.security, size: 14, color: KahootColors.textDim),
+                    Icon(RadixIcons.Lock_Closed, size: 14, color: KahootColors.textDim),
                     SizedBox(width: 6),
                     Flexible(
                       child: Text(

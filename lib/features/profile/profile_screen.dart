@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -33,13 +34,13 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.badge_outlined),
+                  leading: const Icon(RadixIcons.Badge),
                   title: const Text('Vai trò'),
                   trailing: Text(_roleNames[user.role] ?? user.role),
                 ),
                 if (user.createdAt != null)
                   ListTile(
-                    leading: const Icon(Icons.event_outlined),
+                    leading: const Icon(RadixIcons.Calendar),
                     title: const Text('Thành viên từ'),
                     trailing: Text(formatDate(user.createdAt!)),
                   ),
@@ -51,15 +52,15 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.edit_outlined),
+                  leading: const Icon(RadixIcons.Pencil_1),
                   title: const Text('Sửa hồ sơ'),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(RadixIcons.Chevron_Right),
                   onTap: () => context.push(AppRoutes.editProfile),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.lock_outline),
+                  leading: const Icon(RadixIcons.Lock_Closed),
                   title: const Text('Đổi mật khẩu'),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(RadixIcons.Chevron_Right),
                   onTap: () => context.push(AppRoutes.changePassword),
                 ),
                 ValueListenableBuilder<ThemeMode>(
@@ -67,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                   builder: (context, mode, _) {
                     final isDark = mode == ThemeMode.dark;
                     return SwitchListTile(
-                      secondary: Icon(isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined),
+                      secondary: Icon(isDark ? RadixIcons.Moon : RadixIcons.Sun),
                       title: const Text('Giao diện tối (Dark Mode)'),
                       value: isDark,
                       onChanged: (_) => AppTheme.toggleTheme(),
@@ -84,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
               minimumSize: const Size.fromHeight(48),
             ),
             onPressed: () => context.read<AuthController>().logout(),
-            icon: const Icon(Icons.logout),
+            icon: const Icon(RadixIcons.Exit),
             label: const Text('Đăng xuất'),
           ),
         ],

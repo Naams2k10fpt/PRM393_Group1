@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../../data/models/subject.dart';
 
@@ -32,7 +33,7 @@ class SubjectCard extends StatelessWidget {
                   color: colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.menu_book_outlined, color: colorScheme.primary, size: 22),
+                child: Icon(RadixIcons.Reader, color: colorScheme.primary, size: 22),
               ),
               const SizedBox(height: 12),
               Text(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/widgets/brand_logo.dart';
@@ -125,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         validator: Validators.email,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                          prefixIcon: const Icon(RadixIcons.Envelope_Closed, size: 20),
                           errorText: error?.fieldError('email'),
                         ),
                       ),
@@ -180,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => context.push(AppRoutes.kahoot),
-                  icon: const Icon(Icons.sports_esports_outlined),
+                  icon: const Icon(LucideIcons.gamepad2, size: 20),
                   label: const Text('Vào phòng Kahoot (không cần tài khoản)'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),

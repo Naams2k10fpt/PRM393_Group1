@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 import 'kahoot_colors.dart';
 import 'kahoot_signalr_service.dart';
 
@@ -70,12 +71,12 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
             bottom: BorderSide(color: KahootColors.border, width: 1),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.close_rounded, color: KahootColors.textMuted),
+            icon: const Icon(RadixIcons.Cross_1, color: KahootColors.textMuted),
             onPressed: () => Navigator.pop(context),
           ),
           title: Row(
             children: [
-              const Icon(Icons.person_rounded, size: 20, color: KahootColors.cyan),
+              const Icon(RadixIcons.Person, size: 20, color: KahootColors.cyan),
               const SizedBox(width: 8),
               Text(
                 widget.nickname,
@@ -126,7 +127,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star_rounded, size: 18, color: Colors.white),
+                    const Icon(RadixIcons.Star_Filled, size: 18, color: Colors.white),
                     const SizedBox(width: 4),
                     Text(
                       '${s.totalScore} pts',
@@ -218,7 +219,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: KahootColors.accent.withValues(alpha: 0.4)),
                 ),
-                child: const Icon(Icons.flash_on_rounded, color: KahootColors.cyan, size: 44),
+                child: const Icon(RadixIcons.Lightning_Bolt, color: KahootColors.cyan, size: 44),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -288,7 +289,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt_rounded, color: KahootColors.warning, size: 20),
+                const Icon(RadixIcons.Lightning_Bolt, color: KahootColors.warning, size: 20),
                 const SizedBox(width: 6),
                 Text(
                   'CÂU HỎI ${q.questionIndex} / ${q.totalQuestions}',
@@ -426,7 +427,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: KahootColors.success.withValues(alpha: 0.4)),
                 ),
-                child: const Icon(Icons.shield_outlined, color: KahootColors.success, size: 44),
+                child: const Icon(RadixIcons.Lock_Closed, color: KahootColors.success, size: 44),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -495,7 +496,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   border: Border.all(color: color.withValues(alpha: 0.4)),
                 ),
                 child: Icon(
-                  isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                  isCorrect ? RadixIcons.Check_Circled : RadixIcons.Cross_Circled,
                   color: color,
                   size: 52,
                 ),

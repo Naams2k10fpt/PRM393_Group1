@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 import '../../core/config/app_config.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/groups_repository.dart';
@@ -181,7 +182,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           IconButton(
             tooltip: 'Làm mới',
             onPressed: disabled ? null : _load,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(RadixIcons.Reload),
           ),
         ],
       ),
@@ -369,7 +370,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                     TextButton.icon(
                                       onPressed:
                                           disabled ? null : () => _copy(link),
-                                      icon: const Icon(Icons.copy),
+                                      icon: const Icon(RadixIcons.Copy),
                                       label: const Text('Sao chép'),
                                     ),
                                   TextButton(
@@ -534,7 +535,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                       }
                                     }
                                   },
-                          icon: const Icon(Icons.logout),
+                          icon: const Icon(RadixIcons.Exit),
                           label: const Text('Rời nhóm'),
                         ),
                       if (data.isOwner)

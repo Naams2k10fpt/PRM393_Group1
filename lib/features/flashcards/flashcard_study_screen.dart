@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/form_widgets.dart';
@@ -168,7 +169,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              hasCardsNotDue ? Icons.check_circle_outline : Icons.style_outlined,
+              hasCardsNotDue ? RadixIcons.Check_Circled : RadixIcons.Card_Stack,
               size: 44,
               color: hasCardsNotDue ? AppColors.success : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -182,7 +183,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               const SizedBox(height: 20),
               FilledButton.icon(
                 onPressed: _studyEverything,
-                icon: const Icon(Icons.auto_stories_outlined),
+                icon: const Icon(RadixIcons.Reader),
                 label: Text('Ôn trước cả ${session.totalCards} thẻ'),
               ),
             ],
@@ -227,13 +228,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 leftHint: const _SwipeHint(
                   alignment: Alignment.centerLeft,
                   color: AppColors.success,
-                  icon: Icons.check_circle_outline,
+                  icon: RadixIcons.Check_Circled,
                   label: 'Đã thuộc',
                 ),
                 rightHint: const _SwipeHint(
                   alignment: Alignment.centerRight,
                   color: AppColors.danger,
-                  icon: Icons.refresh,
+                  icon: RadixIcons.Reload,
                   label: 'Chưa thuộc',
                 ),
                 child: AspectRatio(
@@ -268,7 +269,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     minimumSize: const Size.fromHeight(48),
                   ),
                   onPressed: () => _answer(false),
-                  icon: const Icon(Icons.refresh),
+                  icon: const Icon(RadixIcons.Reload),
                   label: const Text('Chưa thuộc'),
                 ),
               ),
@@ -281,7 +282,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     minimumSize: const Size.fromHeight(48),
                   ),
                   onPressed: () => _answer(true),
-                  icon: const Icon(Icons.check),
+                  icon: const Icon(RadixIcons.Check),
                   label: const Text('Đã thuộc'),
                 ),
               ),
@@ -297,7 +298,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         const SizedBox(height: 24),
-        const Icon(Icons.emoji_events_outlined, size: 56, color: AppColors.warning),
+        const Icon(RadixIcons.Badge, size: 56, color: AppColors.warning),
         const SizedBox(height: 12),
         Text('Hoàn thành!', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 4),
@@ -326,7 +327,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         if (_missedCount > 0)
           FilledButton.icon(
             onPressed: _load,
-            icon: const Icon(Icons.replay),
+            icon: const Icon(RadixIcons.Reset),
             label: const Text('Ôn lại các thẻ đến hạn'),
           ),
         const SizedBox(height: 12),
