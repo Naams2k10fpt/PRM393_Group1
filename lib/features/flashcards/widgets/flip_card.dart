@@ -22,11 +22,14 @@ class FlipCard extends StatefulWidget {
 class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: const Duration(milliseconds: 480),
   );
 
-  late final Animation<double> _turn =
-      Tween<double>(begin: 0, end: math.pi).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  late final Animation<double> _animation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeInOutCubic,
+    reverseCurve: Curves.easeInOutCubic.flipped,
+  );
 
   @override
   void dispose() {
@@ -35,7 +38,14 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
   }
 
   void _toggle() {
-    if (_controller.isAnimating) return;
+    if (_controller.isAnimating) {
+      if (_controller.status == AnimationStatus.forward) {
+        _controller.reverse();
+      } else {
+        _controller.forward();
+      }
+      return;
+    }
     _controller.value > 0.5 ? _controller.reverse() : _controller.forward();
   }
 
@@ -44,17 +54,21 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
     return GestureDetector(
       onTap: _toggle,
       child: AnimatedBuilder(
-        animation: _turn,
+        animation: _animation,
         builder: (context, child) {
-          final angle = _turn.value;
-          final showingBack = angle > math.pi / 2;
+          final progress = _animation.value;
+          final angle = progress * math.pi;
+          final showingBack = angle > (math.pi / 2);
+          // Subtle spatial lift (card approaches camera slightly mid-flip)
+          final scale = 1.0 + (math.sin(progress * math.pi) * 0.04);
+
           return Transform(
             alignment: Alignment.center,
-            // setEntry adds the perspective. Without it the card looks like it is
-            // being squashed flat rather than turning in space.
+            // 0.0012 provides natural focal perspective without distortion
             transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001)
-              ..rotateY(angle),
+              ..setEntry(3, 2, 0.0012)
+              ..rotateY(angle)
+              ..scale(scale, scale, 1.0),
             child: showingBack
                 // The back is drawn mirrored by the parent rotation, so turn it
                 // back the other way or its text reads in reverse.
