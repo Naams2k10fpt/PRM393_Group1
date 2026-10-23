@@ -117,15 +117,24 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+          side: const BorderSide(color: Color(0x33818CF8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
       dialogTheme: DialogThemeData(
         backgroundColor: AppDarkColors.surface,
         elevation: 8,
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Color(0x33818CF8), width: 1.2),
@@ -193,15 +202,24 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+          side: const BorderSide(color: Color(0x336366F1)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
       dialogTheme: DialogThemeData(
         backgroundColor: AppLightColors.surface,
         elevation: 8,
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         shadowColor: const Color(0x1A000000),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

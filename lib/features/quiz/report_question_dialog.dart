@@ -104,13 +104,22 @@ class _ReportQuestionDialogState extends State<ReportQuestionDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: busy ? null : () => Navigator.pop(context),
-          child: const Text('Hủy'),
-        ),
-        FilledButton(
-          onPressed: busy ? null : _send,
-          child: Text(busy ? 'Đang gửi...' : 'Gửi báo cáo'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: busy ? null : () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: busy ? null : _send,
+                child: Text(busy ? 'Đang gửi...' : 'Gửi báo cáo'),
+              ),
+            ),
+          ],
         ),
       ],
     ),

@@ -275,13 +275,22 @@ class _QuizScreenState extends State<QuizScreen> {
                   : 'Còn $unanswered câu chưa trả lời. Vẫn nộp bài?',
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Tiếp tục làm'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Nộp bài'),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Tiếp tục làm'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Nộp bài'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -559,13 +559,22 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: busy ? null : () => Navigator.pop(context),
-          child: const Text('Hủy'),
-        ),
-        FilledButton(
-          onPressed: busy ? null : _save,
-          child: Text(busy ? 'Đang tạo...' : 'Tạo'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: busy ? null : () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: busy ? null : _save,
+                child: Text(busy ? 'Đang tạo...' : 'Tạo'),
+              ),
+            ),
+          ],
         ),
       ],
     ),

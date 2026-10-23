@@ -74,13 +74,22 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               title: Text(title),
               content: Text(content),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Hủy'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Xác nhận'),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Hủy'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Xác nhận'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

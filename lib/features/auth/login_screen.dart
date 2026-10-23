@@ -243,11 +243,22 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
-        FilledButton(
-          style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-          onPressed: _send,
-          child: const Text('Gửi'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: _send,
+                child: const Text('Gửi'),
+              ),
+            ),
+          ],
         ),
       ],
     );

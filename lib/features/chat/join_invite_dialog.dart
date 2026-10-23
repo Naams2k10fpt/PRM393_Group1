@@ -110,19 +110,28 @@ class _JoinInviteDialogState extends State<JoinInviteDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: busy ? null : () => Navigator.pop(context),
-          child: const Text('Hủy'),
-        ),
-        FilledButton(
-          onPressed: busy ? null : _submit,
-          child: Text(
-            busy
-                ? 'Đang xử lý...'
-                : preview == null
-                ? 'Kiểm tra link'
-                : 'Xác nhận tham gia',
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: busy ? null : () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: busy ? null : _submit,
+                child: Text(
+                  busy
+                      ? 'Đang xử lý...'
+                      : preview == null
+                      ? 'Kiểm tra link'
+                      : 'Xác nhận tham gia',
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     ),

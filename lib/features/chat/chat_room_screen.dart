@@ -512,17 +512,26 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               maxLines: 5,
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Hủy'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (controller.text.trim().isNotEmpty) {
-                    Navigator.pop(context, controller.text.trim());
-                  }
-                },
-                child: const Text('Lưu'),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Hủy'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        if (controller.text.trim().isNotEmpty) {
+                          Navigator.pop(context, controller.text.trim());
+                        }
+                      },
+                      child: const Text('Lưu'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -595,13 +604,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               title: Text(title),
               content: Text(text),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Hủy'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Xác nhận'),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Hủy'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Xác nhận'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

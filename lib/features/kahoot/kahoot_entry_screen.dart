@@ -103,26 +103,39 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: KahootColors.textMuted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: KahootColors.accent,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              AppConfig.baseUrl = urlController.text.trim();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Đã lưu URL: ${AppConfig.baseUrl}'),
-                  backgroundColor: KahootColors.success,
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: KahootColors.border),
+                    foregroundColor: KahootColors.textMuted,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy'),
                 ),
-              );
-            },
-            child: const Text('Lưu'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: KahootColors.accent,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    AppConfig.baseUrl = urlController.text.trim();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đã lưu URL: ${AppConfig.baseUrl}'),
+                        backgroundColor: KahootColors.success,
+                      ),
+                    );
+                  },
+                  child: const Text('Lưu'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
