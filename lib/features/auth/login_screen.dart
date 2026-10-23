@@ -69,21 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _fillCredentials(String email, String password) {
-    setState(() {
-      _email.text = email;
-      _password.text = password;
-      _error = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã chọn tài khoản mẫu: $email'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final error = _error;
@@ -97,31 +82,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               children: [
-                const SizedBox(height: 8),
-                const Center(child: BrandEmblem(size: 76)),
-                const SizedBox(height: 14),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0x1F38BDF8) : const Color(0x140284C7),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: isDark ? const Color(0x3338BDF8) : const Color(0x280284C7),
-                      ),
-                    ),
-                    child: Text(
-                      'NỀN TẢNG ÔN THI THẾ HỆ MỚI',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
-                        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                const Center(child: BrandEmblem(size: 80)),
+                const SizedBox(height: 18),
                 Text(
                   'Đăng nhập QuizMS',
                   textAlign: TextAlign.center,
@@ -130,36 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         letterSpacing: -0.5,
                       ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Nhập thông tin hoặc chọn tài khoản mẫu để trải nghiệm',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 18),
-
-                // One-touch Demo Quick-Fill Bar
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    ActionChip(
-                      avatar: const Icon(Icons.school_outlined, size: 16),
-                      label: const Text('Học sinh Test', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                      onPressed: () => _fillCredentials('student@quizms.com', 'Student@123456'),
-                    ),
-                    ActionChip(
-                      avatar: const Icon(Icons.admin_panel_settings_outlined, size: 16),
-                      label: const Text('Admin Test', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                      onPressed: () => _fillCredentials('admin@quizms.com', 'Admin@123456'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Elevated Glassmorphism Form Card
                 Container(
@@ -253,53 +187,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // Platform Highlights Micro-Ribbon
-                Center(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      _featurePill(Icons.bolt, 'Kahoot Realtime', isDark),
-                      _featurePill(Icons.layers_outlined, 'SRS Spaced', isDark),
-                      _featurePill(Icons.forum_outlined, 'Chat Nhóm', isDark),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _featurePill(IconData icon, String text, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0x1AFFFFFF) : const Color(0x0A000000),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: isDark ? const Color(0x1FBAE3FA) : const Color(0x0F0F172A),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: isDark ? const Color(0xFFC7D3EA) : const Color(0xFF475569)),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: isDark ? const Color(0xFFC7D3EA) : const Color(0xFF475569),
-            ),
-          ),
-        ],
       ),
     );
   }
