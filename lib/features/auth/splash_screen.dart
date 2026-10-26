@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/widgets/brand_logo.dart';
@@ -9,9 +9,6 @@ import 'auth_controller.dart';
 /// if the check failed (offline, server waking up) the user can retry or log in again.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
-
-  static bool get _isTesting =>
-      WidgetsBinding.instance.runtimeType.toString().contains('Test');
 
   @override
   Widget build(BuildContext context) {
@@ -25,22 +22,22 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Lottie.asset(
-                'assets/lottie/trophy.json',
-                width: 130,
-                height: 130,
-                animate: !_isTesting,
-                repeat: !_isTesting,
-                errorBuilder: (context, error, stackTrace) => const BrandEmblem(size: 80),
-              ),
-              const SizedBox(height: 12),
+              const BrandEmblem(size: 88)
+                  .animate()
+                  .fadeIn(duration: 400.ms)
+                  .scale(
+                    begin: const Offset(0.85, 0.85),
+                    end: const Offset(1, 1),
+                    curve: Curves.easeOutCubic,
+                  ),
+              const SizedBox(height: 16),
               Text(
                 'QuizMS',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
-              ),
+              ).animate().fadeIn(duration: 400.ms, delay: 120.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: 28),
               if (error == null) ...[
                 const SizedBox(
