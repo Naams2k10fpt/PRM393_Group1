@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -138,36 +139,89 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ],
-              ),
+              ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
               const SizedBox(height: 18),
             ],
             Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(
+                  color: Color(0x4D663AF3),
+                  width: 1.2,
+                ),
+              ),
+              color: const Color(0x0F663AF3),
               child: ListTile(
-                leading: const Icon(LucideIcons.gamepad2, color: Color(0xFF663AF3)),
-                title: const Text('Kahoot Live'),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF663AF3), Color(0xFF8B5CF6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(LucideIcons.gamepad2, color: Colors.white, size: 22),
+                ),
+                title: const Text('Kahoot Live', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('Nhập mã PIN hoặc quét QR để vào phòng'),
                 trailing: const Icon(RadixIcons.Chevron_Right),
                 onTap: () => context.push(AppRoutes.kahoot),
               ),
-            ),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(RadixIcons.Reader),
-                    title: const Text('Quiz cá nhân'),
-                    subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
-                    trailing: const Icon(RadixIcons.Chevron_Right),
-                    onTap: () => context.push(AppRoutes.quiz),
-                  ),
+            ).animate().fadeIn(duration: 350.ms, delay: 80.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
+            const SizedBox(height: 4),
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(RadixIcons.Chat_Bubble),
-                    title: const Text('Nhóm học'),
-                    subtitle: const Text('Tham gia và trò chuyện thời gian thực'),
-                    trailing: const Icon(RadixIcons.Chevron_Right),
-                    onTap: () => context.push(AppRoutes.groups),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: Icon(RadixIcons.Reader, color: Theme.of(context).colorScheme.primary, size: 22),
                 ),
+                title: const Text('Quiz cá nhân', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
+                trailing: const Icon(RadixIcons.Chevron_Right),
+                onTap: () => context.push(AppRoutes.quiz),
+              ),
+            ).animate().fadeIn(duration: 350.ms, delay: 140.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
+            const SizedBox(height: 4),
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(RadixIcons.Chat_Bubble, color: Colors.teal, size: 22),
+                ),
+                title: const Text('Nhóm học', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Tham gia và trò chuyện thời gian thực'),
+                trailing: const Icon(RadixIcons.Chevron_Right),
+                onTap: () => context.push(AppRoutes.groups),
+              ),
+            ).animate().fadeIn(duration: 350.ms, delay: 200.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 24),
                 Text('Môn học', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
@@ -240,6 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final subject = _subjects[index];
           return SubjectCard(
             subject: subject,
+            index: index,
             // The name rides along so the deck list can title itself without a second request.
             onTap:
                 () => context.push(
@@ -252,3 +307,4 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 }
+

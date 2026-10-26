@@ -45,6 +45,7 @@ dependencies:
   file_picker: 11.0.2
   radix_icons: ^1.0.1
   lucide_icons: ^0.257.0
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
