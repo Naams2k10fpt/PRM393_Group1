@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Academic Cyber Ambient Background
@@ -41,7 +42,7 @@ class _AcademicAmbientBackgroundState extends State<AcademicAmbientBackground>
     );
 
     final inTest = WidgetsBinding.instance.runtimeType.toString().contains('Test') ||
-        (Platform.environment['FLUTTER_TEST'] == 'true');
+        (!kIsWeb && Platform.environment['FLUTTER_TEST'] == 'true');
 
     if (widget.animate && !inTest) {
       _controller.repeat();
