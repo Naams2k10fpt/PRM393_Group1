@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/widgets/brand_logo.dart';
@@ -8,6 +9,9 @@ import 'auth_controller.dart';
 /// if the check failed (offline, server waking up) the user can retry or log in again.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
+
+  static bool get _isTesting =>
+      WidgetsBinding.instance.runtimeType.toString().contains('Test');
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +25,15 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BrandEmblem(size: 80),
-              const SizedBox(height: 16),
+              Lottie.asset(
+                'assets/lottie/trophy.json',
+                width: 130,
+                height: 130,
+                animate: !_isTesting,
+                repeat: !_isTesting,
+                errorBuilder: (context, error, stackTrace) => const BrandEmblem(size: 80),
+              ),
+              const SizedBox(height: 12),
               Text(
                 'QuizMS',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -30,9 +41,13 @@ class SplashScreen extends StatelessWidget {
                       letterSpacing: -0.5,
                     ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               if (error == null) ...[
-                const CircularProgressIndicator(),
+                const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Đang kết nối máy chủ…',
