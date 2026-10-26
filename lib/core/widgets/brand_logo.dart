@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 /// AuthKit Cyber-Academic Design System
 class BrandEmblem extends StatelessWidget {
   final double size;
+  final bool showGlow;
 
-  const BrandEmblem({super.key, this.size = 48});
+  const BrandEmblem({super.key, this.size = 48, this.showGlow = true});
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +15,40 @@ class BrandEmblem extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _BrandEmblemPainter(isDark: isDark),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          // Expansive diffuse ambient glow halo (smoothly bleeding outwards, never clipped into a box)
+          if (showGlow)
+            Positioned(
+              width: size * 2.2,
+              height: size * 2.2,
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        isDark
+                            ? const Color(0xFF663AF3).withValues(alpha: 0.42)
+                            : const Color(0xFF6366F1).withValues(alpha: 0.18),
+                        isDark
+                            ? const Color(0xFF38BDF8).withValues(alpha: 0.20)
+                            : const Color(0xFF0284C7).withValues(alpha: 0.08),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.45, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          CustomPaint(
+            size: Size(size, size),
+            painter: _BrandEmblemPainter(isDark: isDark),
+          ),
+        ],
       ),
     );
   }
@@ -103,7 +136,7 @@ class BrandLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final emblem = BrandEmblem(size: size);
+    final emblem = BrandEmblem(size: size, showGlow: false);
     if (!showText) return emblem;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
