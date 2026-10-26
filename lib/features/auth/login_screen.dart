@@ -82,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
           key: _form,
           child: AutofillGroup(
             child: ListView(
+              clipBehavior: Clip.none,
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               children: [
                 const SizedBox(height: 12),

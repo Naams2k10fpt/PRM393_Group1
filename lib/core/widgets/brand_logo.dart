@@ -22,8 +22,8 @@ class BrandEmblem extends StatelessWidget {
           // Expansive diffuse ambient glow halo (smoothly bleeding outwards, never clipped into a box)
           if (showGlow)
             Positioned(
-              width: size * 2.2,
-              height: size * 2.2,
+              width: size * 3.0,
+              height: size * 3.0,
               child: IgnorePointer(
                 child: Container(
                   decoration: BoxDecoration(
@@ -31,14 +31,17 @@ class BrandEmblem extends StatelessWidget {
                     gradient: RadialGradient(
                       colors: [
                         isDark
-                            ? const Color(0xFF663AF3).withValues(alpha: 0.42)
-                            : const Color(0xFF6366F1).withValues(alpha: 0.18),
+                            ? const Color(0xFF663AF3).withValues(alpha: 0.45)
+                            : const Color(0xFF6366F1).withValues(alpha: 0.20),
                         isDark
-                            ? const Color(0xFF38BDF8).withValues(alpha: 0.20)
-                            : const Color(0xFF0284C7).withValues(alpha: 0.08),
+                            ? const Color(0xFF38BDF8).withValues(alpha: 0.22)
+                            : const Color(0xFF0284C7).withValues(alpha: 0.10),
+                        isDark
+                            ? const Color(0xFF38BDF8).withValues(alpha: 0.05)
+                            : const Color(0xFF0284C7).withValues(alpha: 0.02),
                         Colors.transparent,
                       ],
-                      stops: const [0.0, 0.45, 1.0],
+                      stops: const [0.0, 0.35, 0.65, 1.0],
                     ),
                   ),
                 ),
@@ -77,7 +80,7 @@ class _BrandEmblemPainter extends CustomPainter {
     canvas.drawRRect(boxRect.shift(Offset(0, w * (1.5 / 64))), shadowPaint);
 
     final boxFillPaint = Paint()
-      ..color = isDark ? const Color(0xFF161C28) : const Color(0xFFFFFFFF)
+      ..color = isDark ? const Color(0xE0161C28) : const Color(0xF2FFFFFF)
       ..style = PaintingStyle.fill;
     canvas.drawRRect(boxRect, boxFillPaint);
 
