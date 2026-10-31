@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/widgets/brand_logo.dart';
@@ -110,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isDark ? Colors.black.withOpacity(0.35) : Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -128,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         validator: Validators.email,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: const Icon(RadixIcons.Envelope_Closed, size: 20),
+                          prefixIcon: const Icon(LucideIcons.mail, size: 20),
                           errorText: error?.fieldError('email'),
                         ),
                       ),

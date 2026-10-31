@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:radix_icons/radix_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/repositories/quiz_repository.dart';
@@ -407,7 +406,7 @@ class _QuizScreenState extends State<QuizScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
           isExpanded: true,
-          value: subjectId,
+          initialValue: subjectId,
           decoration: const InputDecoration(labelText: 'Môn học'),
           items:
               subjects
@@ -421,7 +420,7 @@ class _QuizScreenState extends State<QuizScreen> {
         DropdownButtonFormField<int>(
           isExpanded: true,
           key: ValueKey(subjectId),
-          value: deck?.id,
+          initialValue: deck?.id,
           decoration: const InputDecoration(labelText: 'Bộ đề'),
           items:
               decks
@@ -539,7 +538,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         : null,
                 avatar:
                     selected[quiz.questions[i].id]?.isNotEmpty == true
-                        ? const Icon(RadixIcons.Check, size: 16)
+                        ? const Icon(LucideIcons.check, size: 16)
                         : null,
                 onPressed: () => setState(() => questionIndex = i),
               ),
@@ -636,7 +635,7 @@ class _QuizScreenState extends State<QuizScreen> {
         if (data.deckId > 0)
           OutlinedButton.icon(
             onPressed: busy ? null : () => _begin(data.deckId, data.totalCount),
-            icon: const Icon(RadixIcons.Reset),
+            icon: const Icon(LucideIcons.rotateCcw),
             label: Text(busy ? 'Đang tải...' : 'Làm lại bài quiz'),
           ),
         for (var i = 0; i < data.questions.length; i++)
@@ -674,10 +673,10 @@ class _QuizScreenState extends State<QuizScreen> {
                       children: [
                         Icon(
                           answer.isCorrect
-                              ? RadixIcons.Check_Circled
+                              ? LucideIcons.circleCheck
                               : answer.wasSelected
-                              ? RadixIcons.Cross_Circled
-                              : RadixIcons.Circle,
+                              ? LucideIcons.circleX
+                              : LucideIcons.circle,
                           size: 18,
                           color:
                               answer.isCorrect

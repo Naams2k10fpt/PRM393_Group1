@@ -56,6 +56,9 @@ void main() {
 
       expect(api.path, '/api/groups/7/channels');
       expect(channels.map((channel) => channel.id), [1, 3, 4]);
+      final voice = await GroupsRepository(api).voiceChannels(7);
+      expect(voice.map((channel) => channel.id), [2]);
+      expect(voice.single.kind, 1);
       expect(channels.first.isDefault, isTrue);
       expect(channels.map((channel) => channel.name), [
         'chung',

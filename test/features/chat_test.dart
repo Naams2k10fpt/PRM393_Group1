@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:quiz_management_mobile/data/repositories/groups_repository.dart';
-import 'package:radix_icons/radix_icons.dart';
 
 import '../support/fakes.dart';
 import '../support/tv3_fakes.dart';
@@ -74,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester
-          .widget<IconButton>(find.widgetWithIcon(IconButton, RadixIcons.Paper_Plane))
+          .widget<IconButton>(find.widgetWithIcon(IconButton, LucideIcons.send))
           .onPressed,
       isNull,
     );
@@ -85,7 +85,7 @@ void main() {
     expect(find.text('Tin nhắn 3'), findsOneWidget);
     expect(
       tester
-          .widget<IconButton>(find.widgetWithIcon(IconButton, RadixIcons.Paper_Plane))
+          .widget<IconButton>(find.widgetWithIcon(IconButton, LucideIcons.send))
           .onPressed,
       isNotNull,
     );

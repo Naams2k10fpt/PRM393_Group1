@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:radix_icons/radix_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/config/app_config.dart';
 import 'kahoot_colors.dart';
 import 'qr_scanner_screen.dart';
@@ -151,7 +150,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(RadixIcons.Gear, color: KahootColors.textMuted),
+            icon: const Icon(LucideIcons.settings, color: KahootColors.textMuted),
             tooltip: 'Cài đặt kết nối server',
             onPressed: _showSettingsDialog,
           ),
@@ -336,7 +335,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                             borderRadius: BorderRadius.circular(16),
                             borderSide: const BorderSide(color: KahootColors.accent, width: 2),
                           ),
-                          prefixIcon: const Icon(RadixIcons.Person, color: KahootColors.accent),
+                          prefixIcon: const Icon(LucideIcons.userRound, color: KahootColors.accent),
                         ),
                       ),
                       const SizedBox(height: 28),
@@ -370,7 +369,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(RadixIcons.Lightning_Bolt, size: 22),
+                              Icon(LucideIcons.zap, size: 22),
                               SizedBox(width: 8),
                               Flexible(
                                 child: Text(
@@ -395,7 +394,7 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(RadixIcons.Lock_Closed, size: 14, color: KahootColors.textDim),
+                    Icon(LucideIcons.lockKeyhole, size: 14, color: KahootColors.textDim),
                     SizedBox(width: 6),
                     Flexible(
                       child: Text(

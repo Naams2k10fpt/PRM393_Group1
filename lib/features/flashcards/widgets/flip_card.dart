@@ -68,7 +68,7 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.0012)
               ..rotateY(angle)
-              ..scale(scale, scale, 1.0),
+              ..scaleByDouble(scale, scale, 1.0, 1.0),
             child: showingBack
                 // The back is drawn mirrored by the parent rotation, so turn it
                 // back the other way or its text reads in reverse.

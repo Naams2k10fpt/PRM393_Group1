@@ -1,7 +1,8 @@
 # Quiz Management Mobile — repo notes
 
 Flutter client for the PRN232 backend (`PRN232_Group5`: ASP.NET Core 9 + PostgreSQL, live at
-https://prn232-group5.onrender.com). Same features as the website, for phones.
+https://prn232-group5.onrender.com). Student-facing features are available in the app;
+mentor and admin management stays on the web. Sign-in is available to all account roles.
 
 ## Layout
 
@@ -29,13 +30,15 @@ lib/
 
 ## Run it
 
-- Base URL comes from `--dart-define=API_BASE_URL=...`; default is the Render production URL.
+- Base URL comes from `--dart-define=API_BASE_URL=...`; default is localhost for development.
+  Set it to the Render HTTPS URL when building a demo APK (see README).
   Local backend: `dotnet run --project QuizManagement --launch-profile http` in PRN232 → `http://localhost:5039`
   (Android emulator: `http://10.0.2.2:5039`).
 - Checks: `flutter analyze` and `flutter test` (widget tests use fake repositories — no network).
+- Use Flutter 3.47.2 / Dart 3.13.2 from `.fvmrc`; resolve with `flutter pub get --enforce-lockfile`.
 - Run: `flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:5039` is the lightest way to click
-  through. **Disk is tight on the dev machine**: prefer analyze/tests/web; avoid repeated APK or desktop builds,
-  and delete `build/` afterwards.
+  through. Prefer analyze/tests for routine checks; build Android when validating plugin or toolchain changes.
+  Android release APKs currently use debug signing for demos; configure a release keystore for store distribution.
 
 ## Conventions
 

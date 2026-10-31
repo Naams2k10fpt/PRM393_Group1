@@ -4,8 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:radix_icons/radix_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/realtime/chat_connection.dart';
@@ -13,6 +12,8 @@ import '../../data/repositories/groups_repository.dart';
 import '../auth/auth_controller.dart';
 import 'group_details_screen.dart';
 import 'chat_message_tile.dart';
+import 'voice_room_controller.dart';
+import 'voice_room_panel.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   const ChatRoomScreen({super.key, required this.group});
@@ -30,6 +31,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
   ChatConnection? hub;
   List<ChatChannel> channels = [];
   ChatChannel? channel;
+  List<ChatChannel> voiceChannels = [];
+  ChatChannel? voiceChannel;
+  late final voice = VoiceRoomController(repo.openVoice(widget.group.id));
   final messages = <ChatMessage>[];
   List<ChatUpload> files = [];
   ChatMessage? reply;
@@ -63,6 +67,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     foreground = state == AppLifecycleState.resumed;
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden || state == AppLifecycleState.detached) {
+      voice.background();
+    }
     if (foreground && connected.value) {
       unawaited(_refresh().catchError(_showError));
     }
@@ -72,6 +79,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(hub?.close().catchError((Object _) {}));
+    voice.dispose();
     input.dispose();
     scroll.dispose();
     roster.dispose();
@@ -107,6 +115,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
       connection.onChannelsChanged = _loadChannels;
       connection.onAccessRevoked = () {
         if (!mounted) return;
+        unawaited(voice.leave());
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bạn không còn quyền vào nhóm.')),
         );
@@ -172,7 +181,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
 
   Future<void> _loadChannels() async {
     final loaded = await repo.channels(widget.group.id);
+    final loadedVoice = await repo.voiceChannels(widget.group.id);
     if (!mounted) return;
+    setState(() {
+      voiceChannels = loadedVoice;
+      voiceChannel = loadedVoice
+          .where((item) => item.id == voiceChannel?.id)
+          .firstOrNull;
+    });
+    if (voice.channelId != null &&
+        !loadedVoice.any((item) => item.id == voice.channelId)) {
+      unawaited(voice.leave(message: 'Kênh voice đã được lưu trữ.'));
+    }
+    if (loadedVoice.isNotEmpty) unawaited(voice.connect());
     final current = loaded.where((item) => item.id == channel?.id).firstOrNull;
     setState(() => channels = loaded);
     if (current == null && loaded.isNotEmpty) {
@@ -722,7 +743,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               IconButton(
                 tooltip: 'Tạo kênh',
                 onPressed: () => _channelAction('create'),
-                icon: const Icon(RadixIcons.Plus, size: 20),
+                icon: const Icon(LucideIcons.plus, size: 20),
               ),
           ],
         ),
@@ -736,32 +757,57 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                selected: item.id == channel?.id,
-                selectedTileColor: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withValues(alpha: .5),
+                selected: voiceChannel == null && item.id == channel?.id,
+                selectedTileColor: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: .5),
                 leading: const Icon(LucideIcons.hash),
                 title: Text(item.name, overflow: TextOverflow.ellipsis),
-                trailing:
-                    item.unreadCount > 0
-                        ? Badge(label: Text('${item.unreadCount}'))
-                        : null,
-                onTap:
-                    sending
-                        ? null
-                        : () {
-                          if (Scaffold.of(panelContext).isDrawerOpen) {
-                            Navigator.pop(panelContext);
-                          }
-                          _selectChannel(item);
-                        },
+                trailing: item.unreadCount > 0
+                    ? Badge(label: Text('${item.unreadCount}'))
+                    : null,
+                onTap: sending
+                    ? null
+                    : () {
+                        if (Scaffold.of(panelContext).isDrawerOpen) {
+                          Navigator.pop(panelContext);
+                        }
+                        _selectChannel(item);
+                        setState(() => voiceChannel = null);
+                      },
               ),
+            if (voiceChannels.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(8, 20, 8, 8),
+                child: Text(
+                  'KÊNH THOẠI',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+              for (final item in voiceChannels)
+                ListTile(
+                  leading: const Icon(LucideIcons.volume2),
+                  title: Text(item.name),
+                  selected: voiceChannel?.id == item.id,
+                  onTap: () {
+                    if (Scaffold.of(panelContext).isDrawerOpen) {
+                      Navigator.pop(panelContext);
+                    }
+                    setState(() => voiceChannel = item);
+                  },
+                ),
+            ],
           ],
         ),
       ),
       const Divider(height: 1),
       ListTile(
-        leading: const Icon(RadixIcons.Gear),
+        leading: const Icon(LucideIcons.settings),
         title: const Text('Thông tin nhóm'),
         onTap: _details,
       ),
@@ -935,7 +981,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                         right: 16,
                         child: FilledButton.icon(
                           onPressed: _scrollBottom,
-                          icon: const Icon(RadixIcons.Arrow_Down),
+                          icon: const Icon(LucideIcons.arrowDown),
                           label: Text('$newMessages tin mới'),
                         ),
                       ),
@@ -952,7 +998,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               if (reply != null)
                 Row(
                   children: [
-                    const Icon(RadixIcons.Share_1, size: 18),
+                    const Icon(LucideIcons.share2, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -970,7 +1016,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                                 reply = null;
                                 nonce = null;
                               }),
-                      icon: const Icon(RadixIcons.Cross_1, size: 18),
+                      icon: const Icon(LucideIcons.x, size: 18),
                     ),
                   ],
                 ),
@@ -997,7 +1043,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                   IconButton(
                     tooltip: 'Đính kèm ảnh/file',
                     onPressed: sending || channel == null ? null : _pickFiles,
-                    icon: const Icon(RadixIcons.Plus_Circled),
+                    icon: const Icon(LucideIcons.circlePlus),
                   ),
                   Expanded(
                     child: TextField(
@@ -1030,7 +1076,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                               height: 22,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                            : const Icon(RadixIcons.Paper_Plane),
+                            : const Icon(LucideIcons.send),
                   ),
                 ],
               ),
@@ -1048,52 +1094,50 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
       appBar: AppBar(
         leading: const BackButton(),
         title: Text(
-          '# ${channel?.name ?? widget.group.name}',
+          voiceChannel != null
+              ? voiceChannel!.name
+              : '# ${channel?.name ?? widget.group.name}',
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
           if (!wide)
             Builder(
-              builder:
-                  (context) => IconButton(
-                    tooltip: 'Các kênh chat',
-                    onPressed: () => Scaffold.of(context).openDrawer(),
-                    icon: const Icon(LucideIcons.hash),
-                  ),
+              builder: (context) => IconButton(
+                tooltip: 'Các kênh chat',
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                icon: const Icon(LucideIcons.hash),
+              ),
             ),
           IconButton(
             tooltip: 'Thành viên',
             onPressed: _members,
-            icon: const Icon(RadixIcons.Person),
+            icon: const Icon(LucideIcons.userRound),
           ),
           IconButton(
             tooltip: 'Thông tin và quản lý nhóm',
             onPressed: _details,
-            icon: const Icon(RadixIcons.Gear),
+            icon: const Icon(LucideIcons.settings),
           ),
-          if (role >= 1 && channel != null)
+          if (role >= 1 && channel != null && voiceChannel == null)
             PopupMenuButton<String>(
               tooltip: 'Quản lý kênh',
               onSelected: _channelAction,
-              itemBuilder:
-                  (_) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Text('Đổi tên kênh'),
-                    ),
-                    if (!channel!.isDefault)
-                      const PopupMenuItem(
-                        value: 'archive',
-                        child: Text('Lưu trữ kênh'),
-                      ),
-                  ],
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'edit', child: Text('Đổi tên kênh')),
+                if (!channel!.isDefault)
+                  const PopupMenuItem(
+                    value: 'archive',
+                    child: Text('Lưu trữ kênh'),
+                  ),
+              ],
             ),
         ],
       ),
-      drawer:
-          wide
-              ? null
-              : Drawer(child: SafeArea(child: Builder(builder: _channelList))),
+      drawer: wide
+          ? null
+          : Drawer(
+              child: SafeArea(child: Builder(builder: _channelList)),
+            ),
       body: Row(
         children: [
           if (wide)
@@ -1104,7 +1148,53 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                 child: Builder(builder: _channelList),
               ),
             ),
-          Expanded(child: _timeline()),
+          Expanded(
+            child: Column(
+              children: [
+                ListenableBuilder(
+                  listenable: voice,
+                  builder: (context, _) {
+                    if (!voice.joined || voiceChannel != null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Material(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      child: ListTile(
+                        leading: const Icon(LucideIcons.headphones),
+                        title: const Text('Đang trong phòng voice'),
+                        subtitle: Text(
+                          voiceChannels
+                                  .where((item) => item.id == voice.channelId)
+                                  .firstOrNull
+                                  ?.name ??
+                              '',
+                        ),
+                        onTap: () => setState(
+                          () => voiceChannel = voiceChannels
+                              .where((item) => item.id == voice.channelId)
+                              .firstOrNull,
+                        ),
+                        trailing: IconButton(
+                          tooltip: 'Rời phòng voice',
+                          onPressed: voice.leave,
+                          icon: const Icon(LucideIcons.phoneOff),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                Expanded(
+                  child: voiceChannel == null
+                      ? _timeline()
+                      : VoiceRoomPanel(
+                          controller: voice,
+                          channel: voiceChannel!,
+                          onChat: () => setState(() => voiceChannel = null),
+                        ),
+                ),
+              ],
+            ),
+          ),
           if (wide)
             SizedBox(
               width: 220,

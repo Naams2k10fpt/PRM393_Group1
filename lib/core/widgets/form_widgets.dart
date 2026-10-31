@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:radix_icons/radix_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_theme.dart';
 
@@ -48,7 +48,7 @@ class _PasswordFieldState extends State<PasswordField> {
         errorMaxLines: 2,
         suffixIcon: IconButton(
           tooltip: _visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu',
-          icon: Icon(_visible ? RadixIcons.Eye_Closed : RadixIcons.Eye_Open),
+          icon: Icon(_visible ? LucideIcons.eyeOff : LucideIcons.eye),
           onPressed: () => setState(() => _visible = !_visible),
         ),
       ),
@@ -78,7 +78,7 @@ class ErrorBanner extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(RadixIcons.Exclamation_Triangle, color: AppColors.danger, size: 20),
+              const Icon(LucideIcons.triangleAlert, color: AppColors.danger, size: 20),
               const SizedBox(width: 8),
               Expanded(child: Text(message, semanticsLabel: 'Lỗi: $message')),
             ],
