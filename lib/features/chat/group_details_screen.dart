@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:radix_icons/radix_icons.dart';
 import '../../core/config/app_config.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/groups_repository.dart';
@@ -191,7 +191,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           IconButton(
             tooltip: 'Làm mới',
             onPressed: disabled ? null : _load,
-            icon: const Icon(RadixIcons.Reload),
+            icon: const Icon(LucideIcons.refreshCw),
           ),
         ],
       ),
@@ -233,7 +233,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<int>(
                             key: ValueKey('${data.accessMode}:$accessRevision'),
-                            value: data.accessMode,
+                            initialValue: data.accessMode,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Chế độ nhóm',
@@ -318,7 +318,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                       if (data.isOwner)
                         _section('Link mời vào nhóm', [
                           DropdownButtonFormField<int>(
-                            value: durationDays,
+                            initialValue: durationDays,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Thời hạn link mời',
@@ -379,7 +379,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                     TextButton.icon(
                                       onPressed:
                                           disabled ? null : () => _copy(link),
-                                      icon: const Icon(RadixIcons.Copy),
+                                      icon: const Icon(LucideIcons.copy),
                                       label: const Text('Sao chép'),
                                     ),
                                   TextButton(
@@ -544,7 +544,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                       }
                                     }
                                   },
-                          icon: const Icon(RadixIcons.Exit),
+                          icon: const Icon(LucideIcons.logOut),
                           label: const Text('Rời nhóm'),
                         ),
                       if (data.isOwner)

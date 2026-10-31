@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:radix_icons/radix_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../data/repositories/groups_repository.dart';
 
 const chatEmojis = ['👍', '❤️', '😂', '🎉', '🤔', '👀', '✅', '❌'];
@@ -263,7 +263,7 @@ class _ChatAttachmentTileState extends State<ChatAttachmentTile> {
                                                 onPressed:
                                                     () =>
                                                         Navigator.pop(context),
-                                                icon: const Icon(RadixIcons.Cross_1),
+                                                icon: const Icon(LucideIcons.x),
                                               ),
                                             ),
                                             Flexible(
@@ -290,7 +290,7 @@ class _ChatAttachmentTileState extends State<ChatAttachmentTile> {
                                   (_, _, _) => const SizedBox(
                                     height: 80,
                                     child: Center(
-                                      child: Icon(RadixIcons.Image),
+                                      child: Icon(LucideIcons.image),
                                     ),
                                   ),
                             ),
@@ -301,7 +301,7 @@ class _ChatAttachmentTileState extends State<ChatAttachmentTile> {
                           child: Center(
                             child:
                                 snapshot.hasError
-                                    ? const Icon(RadixIcons.Image)
+                                    ? const Icon(LucideIcons.image)
                                     : const CircularProgressIndicator(),
                           ),
                         ),
@@ -310,8 +310,8 @@ class _ChatAttachmentTileState extends State<ChatAttachmentTile> {
           dense: true,
           leading: Icon(
             widget.file.isImage
-                ? RadixIcons.Image
-                : RadixIcons.File_Text,
+                ? LucideIcons.image
+                : LucideIcons.fileText,
           ),
           title: Text(
             widget.file.fileName,
@@ -329,7 +329,7 @@ class _ChatAttachmentTileState extends State<ChatAttachmentTile> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                    : const Icon(RadixIcons.Download),
+                    : const Icon(LucideIcons.download),
           ),
         ),
       ],

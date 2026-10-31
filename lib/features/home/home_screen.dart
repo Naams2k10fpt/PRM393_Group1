@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:radix_icons/radix_icons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -73,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final isDark = mode == ThemeMode.dark;
               return IconButton(
                 tooltip: isDark ? 'Chế độ Sáng' : 'Chế độ Tối',
-                icon: Icon(isDark ? RadixIcons.Sun : RadixIcons.Moon),
+                icon: Icon(isDark ? LucideIcons.sun : LucideIcons.moon),
                 onPressed: AppTheme.toggleTheme,
               );
             },
@@ -95,48 +94,17 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (user != null) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Chào ${user.username}',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Hôm nay học gì nào?',
-                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    'Chào ${user.username}',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0x1AF59E0B),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0x4DF59E0B)),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(LucideIcons.flame, size: 14, color: Color(0xFFF59E0B)),
-                        SizedBox(width: 4),
-                        Text(
-                          '5 ngày',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFF59E0B),
-                          ),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Hôm nay học gì nào?',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
@@ -168,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 title: const Text('Kahoot Live', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('Nhập mã PIN hoặc quét QR để vào phòng'),
-                trailing: const Icon(RadixIcons.Chevron_Right),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => context.push(AppRoutes.kahoot),
               ),
             ).animate().fadeIn(duration: 350.ms, delay: 80.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
@@ -189,11 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(RadixIcons.Reader, color: Theme.of(context).colorScheme.primary, size: 22),
+                  child: Icon(LucideIcons.bookOpen, color: Theme.of(context).colorScheme.primary, size: 22),
                 ),
                 title: const Text('Quiz cá nhân', style: TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
-                trailing: const Icon(RadixIcons.Chevron_Right),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => context.push(AppRoutes.quiz),
               ),
             ).animate().fadeIn(duration: 350.ms, delay: 140.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
@@ -214,11 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.teal.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(RadixIcons.Chat_Bubble, color: Colors.teal, size: 22),
+                  child: const Icon(LucideIcons.messageCircle, color: Colors.teal, size: 22),
                 ),
                 title: const Text('Nhóm học', style: TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: const Text('Tham gia và trò chuyện thời gian thực'),
-                trailing: const Icon(RadixIcons.Chevron_Right),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => context.push(AppRoutes.groups),
               ),
             ).animate().fadeIn(duration: 350.ms, delay: 200.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
@@ -261,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final color = Theme.of(context).colorScheme.onSurfaceVariant;
               return Column(
                 children: [
-                  Icon(RadixIcons.Archive, size: 40, color: color),
+                  Icon(LucideIcons.archive, size: 40, color: color),
                   const SizedBox(height: 12),
                   Text(
                     'Chưa có môn học nào.',

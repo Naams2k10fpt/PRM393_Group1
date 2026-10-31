@@ -4,8 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:radix_icons/radix_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/realtime/chat_connection.dart';
@@ -722,7 +721,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               IconButton(
                 tooltip: 'Tạo kênh',
                 onPressed: () => _channelAction('create'),
-                icon: const Icon(RadixIcons.Plus, size: 20),
+                icon: const Icon(LucideIcons.plus, size: 20),
               ),
           ],
         ),
@@ -761,7 +760,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
       ),
       const Divider(height: 1),
       ListTile(
-        leading: const Icon(RadixIcons.Gear),
+        leading: const Icon(LucideIcons.settings),
         title: const Text('Thông tin nhóm'),
         onTap: _details,
       ),
@@ -935,7 +934,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                         right: 16,
                         child: FilledButton.icon(
                           onPressed: _scrollBottom,
-                          icon: const Icon(RadixIcons.Arrow_Down),
+                          icon: const Icon(LucideIcons.arrowDown),
                           label: Text('$newMessages tin mới'),
                         ),
                       ),
@@ -952,7 +951,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               if (reply != null)
                 Row(
                   children: [
-                    const Icon(RadixIcons.Share_1, size: 18),
+                    const Icon(LucideIcons.share2, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -970,7 +969,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                                 reply = null;
                                 nonce = null;
                               }),
-                      icon: const Icon(RadixIcons.Cross_1, size: 18),
+                      icon: const Icon(LucideIcons.x, size: 18),
                     ),
                   ],
                 ),
@@ -997,7 +996,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                   IconButton(
                     tooltip: 'Đính kèm ảnh/file',
                     onPressed: sending || channel == null ? null : _pickFiles,
-                    icon: const Icon(RadixIcons.Plus_Circled),
+                    icon: const Icon(LucideIcons.circlePlus),
                   ),
                   Expanded(
                     child: TextField(
@@ -1030,7 +1029,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                               height: 22,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                            : const Icon(RadixIcons.Paper_Plane),
+                            : const Icon(LucideIcons.send),
                   ),
                 ],
               ),
@@ -1064,12 +1063,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
           IconButton(
             tooltip: 'Thành viên',
             onPressed: _members,
-            icon: const Icon(RadixIcons.Person),
+            icon: const Icon(LucideIcons.userRound),
           ),
           IconButton(
             tooltip: 'Thông tin và quản lý nhóm',
             onPressed: _details,
-            icon: const Icon(RadixIcons.Gear),
+            icon: const Icon(LucideIcons.settings),
           ),
           if (role >= 1 && channel != null)
             PopupMenuButton<String>(

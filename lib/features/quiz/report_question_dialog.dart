@@ -65,7 +65,7 @@ class _ReportQuestionDialogState extends State<ReportQuestionDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: reason,
+              initialValue: reason,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Lý do'),
               items: const [

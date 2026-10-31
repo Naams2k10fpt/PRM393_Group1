@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:radix_icons/radix_icons.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/repositories/groups_repository.dart';
 import 'chat_room_screen.dart';
@@ -159,12 +159,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
         IconButton(
           tooltip: 'Tham gia bằng link mời',
           onPressed: _joinLink,
-          icon: const Icon(RadixIcons.Link_2),
+          icon: const Icon(LucideIcons.link),
         ),
         IconButton(
           tooltip: 'Tạo nhóm',
           onPressed: loading ? null : _create,
-          icon: const Icon(RadixIcons.Plus),
+          icon: const Icon(LucideIcons.plus),
         ),
       ],
     ),
@@ -251,8 +251,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       child: ListTile(
                         leading: Icon(
                           group.accessMode == 2
-                              ? RadixIcons.Lock_Closed
-                              : RadixIcons.Chat_Bubble,
+                              ? LucideIcons.lockKeyhole
+                              : LucideIcons.messageCircle,
                         ),
                         title: Text(group.name),
                         subtitle: Text(
@@ -262,9 +262,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             group.unreadCount > 0
                                 ? Badge(
                                   label: Text('${group.unreadCount}'),
-                                  child: const Icon(RadixIcons.Chevron_Right),
+                                  child: const Icon(LucideIcons.chevronRight),
                                 )
-                                : const Icon(RadixIcons.Chevron_Right),
+                                : const Icon(LucideIcons.chevronRight),
                         onTap: () => _open(group),
                       ),
                     ),
@@ -279,14 +279,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       suffixIcon: IconButton(
                         tooltip: 'Tìm kiếm',
                         onPressed: () => _find(),
-                        icon: const Icon(RadixIcons.Magnifying_Glass),
+                        icon: const Icon(LucideIcons.search),
                       ),
                     ),
                     onSubmitted: (_) => _find(),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: accessMode ?? -1,
+                    initialValue: accessMode ?? -1,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Quyền tham gia',
@@ -306,7 +306,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: subjectId ?? -1,
+                    initialValue: subjectId ?? -1,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Môn học'),
                     items: [
@@ -328,7 +328,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: sort,
+                    initialValue: sort,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Sắp xếp'),
                     items: const [
@@ -520,7 +520,7 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
                 decoration: const InputDecoration(labelText: 'Mô tả'),
               ),
               DropdownButtonFormField<int>(
-                value: -1,
+                initialValue: -1,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Môn học của bạn'),
                 items: [
@@ -541,7 +541,7 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
-                value: mode,
+                initialValue: mode,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Quyền tham gia'),
                 items: const [

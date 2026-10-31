@@ -1,5 +1,5 @@
 /// Backend location. Set at build time with `--dart-define=API_BASE_URL=http://localhost:5039`;
-/// defaults to the Render production backend.
+/// defaults to the local development backend. Set API_BASE_URL when building for a phone.
 class AppConfig {
   AppConfig._();
 

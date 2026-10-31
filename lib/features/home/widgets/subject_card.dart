@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:radix_icons/radix_icons.dart';
 
 import '../../../data/models/subject.dart';
 
@@ -58,7 +57,7 @@ class SubjectCard extends StatelessWidget {
                     color: colorScheme.primary.withValues(alpha: 0.2),
                   ),
                 ),
-                child: Icon(RadixIcons.Reader, color: colorScheme.primary, size: 22),
+                child: Icon(LucideIcons.bookOpen, color: colorScheme.primary, size: 22),
               ),
               const SizedBox(height: 12),
               Text(
