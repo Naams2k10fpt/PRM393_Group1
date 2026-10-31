@@ -4,12 +4,14 @@ import '../api/api_client.dart';
 import '../models/study_group.dart';
 export '../models/study_group.dart';
 import '../realtime/chat_connection.dart';
+import '../realtime/voice_connection.dart';
 
 class GroupsRepository {
   GroupsRepository(this.api);
   final ApiClient api;
 
   ChatConnection openChat(int groupId) => SignalRChatConnection(api, groupId);
+  VoiceConnection openVoice(int groupId) => SignalRVoiceConnection(api, groupId);
 
   Future<List<StudyGroup>> mine() async =>
       (await api.get('/api/groups') as List)
@@ -64,12 +66,18 @@ class GroupsRepository {
 
   Future<List<ChatChannel>> channels(int id) async =>
       (await api.get('/api/groups/$id/channels') as List)
-          // Voice/video currently runs in the web room. Keep mobile text routing compatible.
+          // Text timelines never receive a voice channel ID.
           .where((item) => ((item as Map)['kind'] as int? ?? 0) == 0)
           .map(
             (item) =>
                 ChatChannel.fromJson(Map<String, dynamic>.from(item as Map)),
           )
+          .toList();
+
+  Future<List<ChatChannel>> voiceChannels(int id) async =>
+      (await api.get('/api/groups/$id/channels') as List)
+          .where((item) => (item as Map)['kind'] == 1)
+          .map((item) => ChatChannel.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList();
 
   Future<void> saveChannel(

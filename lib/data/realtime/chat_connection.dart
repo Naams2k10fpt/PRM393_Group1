@@ -30,6 +30,7 @@ class SignalRChatConnection extends ChatConnection {
                 '${AppConfig.baseUrl}/hubs/chat',
                 options: HttpConnectionOptions(
                   accessTokenFactory: api.accessToken,
+                  requestTimeout: 60000,
                 ),
               )
               .withAutomaticReconnect()

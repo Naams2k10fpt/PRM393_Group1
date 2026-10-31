@@ -13,6 +13,7 @@ accounts can still sign in regardless of role.
 - Subjects and decks, flashcard study with flip/swipe and review progress
 - Personal quizzes: single/multiple answers, timer, draft recovery, results and paged history
 - Study groups: create/discover/join, cancel pending requests, realtime chat and unread counts
+- Group voice/video rooms shared with the web: microphone, camera, speaker and camera switching
 
 TV3 implementation and verification: [Quiz and group chat](docs/tv3-mobile.md).
 Channel chat with replies, reactions and study files: [TV3 channel chat](docs/channel-chat.md).
@@ -33,7 +34,7 @@ symlinks can be generated, even when targeting Android or web.
 flutter pub get --enforce-lockfile
 flutter analyze --no-pub
 flutter test --no-pub
-flutter build apk --release --target-platform android-arm64 --no-pub --dart-define=API_BASE_URL=https://prn232-group5.onrender.com
+flutter build apk --release --split-per-abi --target-platform android-arm64 --dart-define=API_BASE_URL=https://prn232-group5.onrender.com
 flutter run -d chrome --dart-define=API_BASE_URL=https://prn232-group5.onrender.com
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:5039   # against a local backend
 ```

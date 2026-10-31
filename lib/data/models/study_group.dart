@@ -227,8 +227,9 @@ class ChatChannel {
       name = json['name'] as String,
       topic = json['topic'] as String?,
       isDefault = json['isDefault'] as bool,
+      kind = json['kind'] as int? ?? 0,
       unreadCount = json['unreadCount'] as int? ?? 0;
-  final int id, groupId;
+  final int id, groupId, kind;
   final String name;
   final String? topic;
   final bool isDefault;
