@@ -68,12 +68,20 @@ void main() {
       }
 
       Future<Map<String, dynamic>> stats() async {
+        final activeCall = call;
+        if (activeCall == null) {
+          return {
+            'participants': 0,
+            'states': <dynamic>[],
+            'rtp': <dynamic>[],
+          };
+        }
         final reports = await Future.wait(
-          call!.peers.values.map((peer) => peer.stats()),
+          activeCall.peers.values.map((peer) => peer.stats()),
         );
         return {
-          'participants': call!.participants.length,
-          'states': call!.states.values.toList(),
+          'participants': activeCall.participants.length,
+          'states': activeCall.states.values.toList(),
           'rtp': reports
               .expand((items) => items)
               .where(
