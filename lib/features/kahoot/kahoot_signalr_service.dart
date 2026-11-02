@@ -139,7 +139,9 @@ class KahootSignalRService extends ChangeNotifier {
       notifyListeners();
       // Khôi phục phiên kết nối phòng chơi khi mạng reconnect
       if (currentRoomCode.isNotEmpty && currentNickname.isNotEmpty) {
-        _hubConnection!.invoke('JoinRoom', args: [currentRoomCode, currentNickname, '']).catchError((_) {});
+        _hubConnection!
+            .invoke('JoinRoom', args: [currentRoomCode, currentNickname, ''])
+            .catchError((_) => null);
       }
     });
 
