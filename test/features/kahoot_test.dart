@@ -77,6 +77,8 @@ void main() {
       expect(service.isConnected, isFalse);
       expect(service.isAnswerSubmitted, isFalse);
       expect(service.isGameOver, isFalse);
+      expect(service.isLeaderboardRevealed, isFalse);
+      expect(service.pendingAnswerResult, isNull);
       expect(service.currentQuestion, isNull);
       expect(service.lastAnswerResult, isNull);
       expect(service.participantId, 0);

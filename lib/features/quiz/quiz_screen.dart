@@ -406,7 +406,7 @@ class _QuizScreenState extends State<QuizScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
           isExpanded: true,
-          initialValue: subjectId,
+          value: subjectId,
           decoration: const InputDecoration(labelText: 'Môn học'),
           items:
               subjects
@@ -420,7 +420,7 @@ class _QuizScreenState extends State<QuizScreen> {
         DropdownButtonFormField<int>(
           isExpanded: true,
           key: ValueKey(subjectId),
-          initialValue: deck?.id,
+          value: deck?.id,
           decoration: const InputDecoration(labelText: 'Bộ đề'),
           items:
               decks

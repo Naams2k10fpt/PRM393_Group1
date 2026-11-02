@@ -106,6 +106,8 @@ class KahootSignalRService extends ChangeNotifier {
 
   KahootQuestionModel? currentQuestion;
   KahootResultModel? lastAnswerResult;
+  KahootResultModel? pendingAnswerResult;
+  bool isLeaderboardRevealed = false;
   DateTime? questionReceivedAt;
   int? questionEndedCorrectAnswerId;
   List<KahootLeaderboardItem> currentLeaderboard = [];
@@ -145,6 +147,7 @@ class KahootSignalRService extends ChangeNotifier {
     _hubConnection!.on('ReceiveQuestion', _handleReceiveQuestion);
     _hubConnection!.on('AnswerResult', _handleAnswerResult);
     _hubConnection!.on('QuestionEnded', _handleQuestionEnded);
+    _hubConnection!.on('LeaderboardShown', _handleLeaderboardShown);
     _hubConnection!.on('GameOver', _handleGameOver);
     _hubConnection!.on('Error', _handleError);
 
@@ -171,6 +174,8 @@ class KahootSignalRService extends ChangeNotifier {
       questionReceivedAt = DateTime.now();
       isAnswerSubmitted = false;
       lastAnswerResult = null;
+      pendingAnswerResult = null;
+      isLeaderboardRevealed = false;
       questionEndedCorrectAnswerId = null;
       lastErrorMessage = null;
       _questionStreamController.add(currentQuestion!);
@@ -181,11 +186,28 @@ class KahootSignalRService extends ChangeNotifier {
   void _handleAnswerResult(List<dynamic>? args) {
     if (args != null && args.isNotEmpty) {
       final map = args[0] as Map<String, dynamic>;
-      lastAnswerResult = KahootResultModel.fromMap(map);
-      totalScore = lastAnswerResult!.totalScore;
-      _resultStreamController.add(lastAnswerResult!);
+      // Lưu tạm kết quả chấm điểm từ server, KHÔNG hiển thị và KHÔNG cộng điểm ngay
+      // Người chơi giữ nguyên màn hình chờ đã nộp cho tới khi chủ phòng mở bảng điểm
+      pendingAnswerResult = KahootResultModel.fromMap(map);
       notifyListeners();
     }
+  }
+
+  void _handleLeaderboardShown(List<dynamic>? args) {
+    isLeaderboardRevealed = true;
+    if (pendingAnswerResult != null) {
+      lastAnswerResult = pendingAnswerResult;
+      totalScore = lastAnswerResult!.totalScore;
+      _resultStreamController.add(lastAnswerResult!);
+    }
+    if (args != null && args.isNotEmpty) {
+      final map = args[0] as Map<String, dynamic>;
+      final rawBoard = map['leaderboard'] as List<dynamic>? ?? [];
+      currentLeaderboard = rawBoard
+          .map((item) => KahootLeaderboardItem.fromMap(item as Map<String, dynamic>))
+          .toList();
+    }
+    notifyListeners();
   }
 
   void _handleQuestionEnded(List<dynamic>? args) {
@@ -202,6 +224,10 @@ class KahootSignalRService extends ChangeNotifier {
 
   void _handleGameOver(List<dynamic>? args) {
     isGameOver = true;
+    if (pendingAnswerResult != null && lastAnswerResult == null) {
+      lastAnswerResult = pendingAnswerResult;
+      totalScore = lastAnswerResult!.totalScore;
+    }
     if (args != null && args.isNotEmpty) {
       final map = args[0] as Map<String, dynamic>;
       final rawPodium = map['podium'] as List<dynamic>? ?? [];

@@ -233,7 +233,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<int>(
                             key: ValueKey('${data.accessMode}:$accessRevision'),
-                            initialValue: data.accessMode,
+                            value: data.accessMode,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Chế độ nhóm',
@@ -318,7 +318,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                       if (data.isOwner)
                         _section('Link mời vào nhóm', [
                           DropdownButtonFormField<int>(
-                            initialValue: durationDays,
+                            value: durationDays,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Thời hạn link mời',

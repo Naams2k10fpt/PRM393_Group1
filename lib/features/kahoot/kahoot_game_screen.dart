@@ -158,14 +158,17 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
               return _buildGameOverView(s);
             }
 
-            if (s.lastAnswerResult != null) {
+            // Khi chủ phòng đã chuyển sang xem bảng điểm và người chơi có kết quả trả lời
+            if (s.isLeaderboardRevealed && s.lastAnswerResult != null) {
               return _buildResultView(s.lastAnswerResult!);
             }
 
-            if (s.questionEndedCorrectAnswerId != null && !s.isAnswerSubmitted) {
+            // Khi câu hỏi kết thúc hoặc chuyển sang bảng điểm mà người chơi chưa kịp nộp bài
+            if ((s.isLeaderboardRevealed || s.questionEndedCorrectAnswerId != null) && !s.isAnswerSubmitted) {
               return _buildTimeUpView(s);
             }
 
+            // Khi người chơi đã nộp câu trả lời, hiển thị màn hình khóa đáp án chờ chủ phòng mở bảng điểm
             if (s.isAnswerSubmitted) {
               return _buildSubmittedWaitingView();
             }
@@ -438,7 +441,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Lựa chọn của bạn đã được gửi an toàn lên hệ thống.\nĐang chờ thời gian kết thúc để chấm điểm...',
+                'Lựa chọn của bạn đã được gửi an toàn lên hệ thống.\nĐang chờ chủ phòng công bố bảng điểm để xem kết quả...',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: KahootColors.textMuted, fontSize: 14, height: 1.5),
               ),

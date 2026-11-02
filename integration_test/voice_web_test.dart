@@ -72,7 +72,7 @@ void main() {
           call!.peers.values.map((peer) => peer.stats()),
         );
         return {
-          'participants': call!.participants.length,
+          'participants': call.participants.length,
           'states': call.states.values.toList(),
           'rtp': reports
               .expand((items) => items)

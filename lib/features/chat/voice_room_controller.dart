@@ -168,8 +168,8 @@ class VoiceRoomController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  void _error(Object exception) {
-    if (_disposed) return;
+  Null _error(Object exception) {
+    if (_disposed) return null;
     final text = exception.toString();
     error =
         RegExp(
@@ -188,6 +188,7 @@ class VoiceRoomController extends ChangeNotifier {
         ? text.substring(text.indexOf('Exception:') + 10).trim()
         : text;
     _changed();
+    return null;
   }
 
   Future<void> connect() async {
