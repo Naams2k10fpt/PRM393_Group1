@@ -73,6 +73,29 @@ class KahootResultModel {
   }
 }
 
+class KahootLeaderboardItem {
+  final int rank;
+  final String nickname;
+  final int score;
+  final int participantId;
+
+  KahootLeaderboardItem({
+    required this.rank,
+    required this.nickname,
+    required this.score,
+    required this.participantId,
+  });
+
+  factory KahootLeaderboardItem.fromMap(Map<String, dynamic> map) {
+    return KahootLeaderboardItem(
+      rank: map['rank'] as int? ?? 0,
+      nickname: map['nickname'] as String? ?? '',
+      score: map['score'] as int? ?? (map['totalScore'] as int? ?? 0),
+      participantId: map['participantId'] as int? ?? 0,
+    );
+  }
+}
+
 class KahootSignalRService extends ChangeNotifier {
   HubConnection? _hubConnection;
   
@@ -83,6 +106,12 @@ class KahootSignalRService extends ChangeNotifier {
 
   KahootQuestionModel? currentQuestion;
   KahootResultModel? lastAnswerResult;
+  DateTime? questionReceivedAt;
+  int? questionEndedCorrectAnswerId;
+  List<KahootLeaderboardItem> currentLeaderboard = [];
+  List<KahootLeaderboardItem> podium = [];
+  String? lastErrorMessage;
+
   bool isConnected = false;
   bool isAnswerSubmitted = false;
   bool isGameOver = false;
@@ -96,17 +125,28 @@ class KahootSignalRService extends ChangeNotifier {
   Future<void> connect(String roomCode, String nickname) async {
     currentRoomCode = roomCode.trim().toUpperCase();
     currentNickname = nickname.trim();
+    lastErrorMessage = null;
 
     _hubConnection = HubConnectionBuilder()
         .withUrl(AppConfig.kahootHubUrl)
         .withAutomaticReconnect()
         .build();
 
+    _hubConnection!.onreconnected(({connectionId}) {
+      isConnected = true;
+      notifyListeners();
+      // Khôi phục phiên kết nối phòng chơi khi mạng reconnect
+      if (currentRoomCode.isNotEmpty && currentNickname.isNotEmpty) {
+        _hubConnection!.invoke('JoinRoom', args: [currentRoomCode, currentNickname, '']).catchError((_) {});
+      }
+    });
+
     _hubConnection!.on('JoinedSuccess', _handleJoinedSuccess);
     _hubConnection!.on('ReceiveQuestion', _handleReceiveQuestion);
     _hubConnection!.on('AnswerResult', _handleAnswerResult);
     _hubConnection!.on('QuestionEnded', _handleQuestionEnded);
     _hubConnection!.on('GameOver', _handleGameOver);
+    _hubConnection!.on('Error', _handleError);
 
     await _hubConnection!.start();
     isConnected = true;
@@ -128,8 +168,11 @@ class KahootSignalRService extends ChangeNotifier {
     if (args != null && args.isNotEmpty) {
       final map = args[0] as Map<String, dynamic>;
       currentQuestion = KahootQuestionModel.fromMap(map);
+      questionReceivedAt = DateTime.now();
       isAnswerSubmitted = false;
       lastAnswerResult = null;
+      questionEndedCorrectAnswerId = null;
+      lastErrorMessage = null;
       _questionStreamController.add(currentQuestion!);
       notifyListeners();
     }
@@ -146,27 +189,65 @@ class KahootSignalRService extends ChangeNotifier {
   }
 
   void _handleQuestionEnded(List<dynamic>? args) {
+    if (args != null && args.isNotEmpty) {
+      final map = args[0] as Map<String, dynamic>;
+      questionEndedCorrectAnswerId = map['correctAnswerId'] as int?;
+      final rawBoard = map['leaderboard'] as List<dynamic>? ?? [];
+      currentLeaderboard = rawBoard
+          .map((item) => KahootLeaderboardItem.fromMap(item as Map<String, dynamic>))
+          .toList();
+    }
     notifyListeners();
   }
 
   void _handleGameOver(List<dynamic>? args) {
     isGameOver = true;
+    if (args != null && args.isNotEmpty) {
+      final map = args[0] as Map<String, dynamic>;
+      final rawPodium = map['podium'] as List<dynamic>? ?? [];
+      final rawBoard = map['fullLeaderboard'] as List<dynamic>? ?? [];
+      podium = rawPodium
+          .map((item) => KahootLeaderboardItem.fromMap(item as Map<String, dynamic>))
+          .toList();
+      currentLeaderboard = rawBoard
+          .map((item) => KahootLeaderboardItem.fromMap(item as Map<String, dynamic>))
+          .toList();
+    }
     notifyListeners();
   }
 
-  Future<void> submitAnswer(int selectedAnswerId, double elapsedSeconds) async {
+  void _handleError(List<dynamic>? args) {
+    if (args != null && args.isNotEmpty) {
+      lastErrorMessage = args[0]?.toString() ?? 'Lỗi kết nối phòng đấu';
+      isAnswerSubmitted = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> submitAnswer(int selectedAnswerId, [double? elapsedSeconds]) async {
     if (_hubConnection == null || currentQuestion == null || participantId == 0) return;
+
+    double calculatedElapsed = elapsedSeconds ?? 0.0;
+    if (elapsedSeconds == null && questionReceivedAt != null) {
+      calculatedElapsed = DateTime.now().difference(questionReceivedAt!).inMilliseconds / 1000.0;
+    }
 
     isAnswerSubmitted = true;
     notifyListeners();
 
-    await _hubConnection!.invoke('SubmitAnswer', args: [
-      currentRoomCode,
-      participantId,
-      currentQuestion!.questionId,
-      selectedAnswerId,
-      elapsedSeconds,
-    ]);
+    try {
+      await _hubConnection!.invoke('SubmitAnswer', args: [
+        currentRoomCode,
+        participantId,
+        currentQuestion!.questionId,
+        selectedAnswerId,
+        calculatedElapsed,
+      ]);
+    } catch (e) {
+      lastErrorMessage = e.toString();
+      isAnswerSubmitted = false;
+      notifyListeners();
+    }
   }
 
   Future<void> disconnect() async {

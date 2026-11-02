@@ -20,7 +20,6 @@ class KahootGameScreen extends StatefulWidget {
 
 class _KahootGameScreenState extends State<KahootGameScreen> {
   late KahootSignalRService _service;
-  DateTime? _questionStartTime;
 
   @override
   void initState() {
@@ -43,13 +42,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
 
   void _onAnswerSelected(KahootAnswerChoice ans) {
     if (_service.currentQuestion == null || _service.isAnswerSubmitted) return;
-
-    double elapsed = 0.0;
-    if (_questionStartTime != null) {
-      elapsed = DateTime.now().difference(_questionStartTime!).inMilliseconds / 1000.0;
-    }
-
-    _service.submitAnswer(ans.id, elapsed);
+    _service.submitAnswer(ans.id);
   }
 
   @override
@@ -169,12 +162,15 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
               return _buildResultView(s.lastAnswerResult!);
             }
 
+            if (s.questionEndedCorrectAnswerId != null && !s.isAnswerSubmitted) {
+              return _buildTimeUpView(s);
+            }
+
             if (s.isAnswerSubmitted) {
               return _buildSubmittedWaitingView();
             }
 
             if (s.currentQuestion != null) {
-              _questionStartTime ??= DateTime.now();
               return _buildAnsweringView(s.currentQuestion!);
             }
 
@@ -542,13 +538,111 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
     );
   }
 
-  Widget _buildGameOverView(KahootSignalRService s) {
+  Widget _buildTimeUpView(KahootSignalRService s) {
+    String correctText = '';
+    if (s.currentQuestion != null && s.questionEndedCorrectAnswerId != null) {
+      final match = s.currentQuestion!.answers.where((a) => a.id == s.questionEndedCorrectAnswerId);
+      if (match.isNotEmpty) {
+        correctText = match.first.text;
+      }
+    }
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28.0),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 420),
           padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: KahootColors.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: KahootColors.warning.withValues(alpha: 0.5), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: KahootColors.warning.withValues(alpha: 0.2),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  color: KahootColors.warning.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: KahootColors.warning.withValues(alpha: 0.4)),
+                ),
+                child: const Icon(
+                  LucideIcons.clock,
+                  color: KahootColors.warning,
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'HẾT THỜI GIAN!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: KahootColors.warning,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: KahootColors.elevated,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: KahootColors.border),
+                ),
+                child: const Text(
+                  '+0 điểm',
+                  style: TextStyle(
+                    color: KahootColors.textMuted,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (correctText.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Đáp án chính xác: $correctText',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: KahootColors.cyan,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              const Text(
+                'Hãy nhìn lên màn hình chính để xem thứ hạng!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: KahootColors.textMuted, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameOverView(KahootSignalRService s) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
             color: KahootColors.surface,
             borderRadius: BorderRadius.circular(28),
@@ -565,7 +659,21 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('🏆', style: TextStyle(fontSize: 72)),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      KahootColors.warning.withValues(alpha: 0.25),
+                      KahootColors.accent.withValues(alpha: 0.15),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: KahootColors.warning.withValues(alpha: 0.5)),
+                ),
+                child: const Icon(LucideIcons.trophy, color: KahootColors.warning, size: 44),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'HOÀN THÀNH TRẬN ĐẤU!',
@@ -577,7 +685,7 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
@@ -594,7 +702,80 @@ class _KahootGameScreenState extends State<KahootGameScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 28),
+              if (s.podium.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                const Text(
+                  'BẢNG VINH DANH CHUNG CUỘC',
+                  style: TextStyle(
+                    color: KahootColors.cyan,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...s.podium.map((p) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: p.participantId == s.participantId
+                        ? KahootColors.accent.withValues(alpha: 0.2)
+                        : KahootColors.elevated,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: p.participantId == s.participantId
+                          ? KahootColors.accent
+                          : KahootColors.border,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: p.rank == 1
+                              ? KahootColors.warning
+                              : (p.rank == 2 ? const Color(0xFF94A3B8) : const Color(0xFFCD7F32)),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${p.rank}',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          p.nickname,
+                          style: TextStyle(
+                            color: p.participantId == s.participantId
+                                ? KahootColors.cyan
+                                : KahootColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        '${p.score} pts',
+                        style: const TextStyle(
+                          color: KahootColors.textMuted,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              ],
+              const SizedBox(height: 24),
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
