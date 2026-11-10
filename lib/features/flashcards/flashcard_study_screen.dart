@@ -297,96 +297,114 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         : AppLightColors.success;
     final missedColor = theme.colorScheme.error;
 
-    return ListView(
-      key: ValueKey(card.questionId),
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        if (_mode == _StudyMode.missed) ...[
-          Text('Ôn câu chưa thuộc', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-        ],
-        Row(
-          children: [
-            Text(
-              '${_index + 1}/$total',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: _index / total,
-                  minHeight: 8,
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        Expanded(
+          child: ListView(
+            key: ValueKey(card.questionId),
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (_mode == _StudyMode.missed) ...[
+                Text('Ôn câu chưa thuộc', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+              ],
+              Row(
+                children: [
+                  Text(
+                    '${_index + 1}/$total',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: _index / total,
+                        minHeight: 8,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Đã học $_index/$total  ·  Đã thuộc $_knownCount  ·  Chưa thuộc $_missedCount',
+                style: theme.textTheme.bodySmall,
+              ),
+              _syncStatus(showSaving: false),
+              const SizedBox(height: 16),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.85, end: 1),
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 140),
+                builder: (context, value, child) =>
+                    Opacity(opacity: value, child: child),
+                child: SwipeToMark(
+                  onMarked: (remembered) =>
+                      _answer(card.questionId, remembered),
+                  rememberedColor: knownColor,
+                  missedColor: missedColor,
+                  child: StudyCard(card: card),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Đã học $_index/$total  ·  Đã thuộc $_knownCount  ·  Chưa thuộc $_missedCount',
-          style: theme.textTheme.bodySmall,
-        ),
-        _syncStatus(showSaving: false),
-        const SizedBox(height: 16),
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.85, end: 1),
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 140),
-          builder: (context, value, child) =>
-              Opacity(opacity: value, child: child),
-          child: SwipeToMark(
-            onMarked: (remembered) => _answer(card.questionId, remembered),
-            rememberedColor: knownColor,
-            missedColor: missedColor,
-            child: StudyCard(card: card),
+              const SizedBox(height: 12),
+              Text(
+                'Kéo thẻ sang trái hoặc phải, hoặc chọn nút bên dưới.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Kéo thẻ sang trái hoặc phải, hoặc chọn nút bên dưới.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: 13,
+        Material(
+          color: theme.colorScheme.surface,
+          child: Column(
+            children: [
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: missedColor,
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        onPressed: _persisting
+                            ? null
+                            : () => _answer(card.questionId, false),
+                        icon: const Icon(LucideIcons.arrowLeft),
+                        label: const Text('Chưa thuộc'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: knownColor,
+                          foregroundColor: AppDarkColors.background,
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        onPressed: _persisting
+                            ? null
+                            : () => _answer(card.questionId, true),
+                        icon: const Icon(LucideIcons.arrowRight),
+                        iconAlignment: IconAlignment.end,
+                        label: const Text('Đã thuộc'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: missedColor,
-                  minimumSize: const Size.fromHeight(48),
-                ),
-                onPressed: _persisting
-                    ? null
-                    : () => _answer(card.questionId, false),
-                icon: const Icon(LucideIcons.arrowLeft),
-                label: const Text('Chưa thuộc'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: knownColor,
-                  foregroundColor: AppDarkColors.background,
-                  minimumSize: const Size.fromHeight(48),
-                ),
-                onPressed: _persisting
-                    ? null
-                    : () => _answer(card.questionId, true),
-                icon: const Icon(LucideIcons.arrowRight),
-                iconAlignment: IconAlignment.end,
-                label: const Text('Đã thuộc'),
-              ),
-            ),
-          ],
         ),
       ],
     );

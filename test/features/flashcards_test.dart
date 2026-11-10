@@ -90,12 +90,38 @@ void main() {
         visibleFaceText('Nạp lại code mà không mất trạng thái'),
         findsOneWidget,
       );
-      await tester.scrollUntilVisible(find.text('Đã thuộc'), 120);
+      expect(find.text('Đã thuộc').hitTestable(), findsOneWidget);
       await tester.tap(find.text('Đã thuộc'));
       await tester.pumpAndSettle();
       expect(find.text('Hoàn thành!'), findsOneWidget);
     },
   );
+
+  testWidgets('recall buttons stay visible across phone and tablet sizes', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await openStudyScreen(tester, TestApp(token: 'token'));
+    for (final size in const [
+      Size(320, 568),
+      Size(390, 780),
+      Size(768, 1024),
+      Size(844, 390),
+    ]) {
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpAndSettle();
+      final known = find.widgetWithText(FilledButton, 'Đã thuộc');
+      final missed = find.widgetWithText(OutlinedButton, 'Chưa thuộc');
+      expect(known.hitTestable(), findsOneWidget, reason: '$size');
+      expect(missed.hitTestable(), findsOneWidget, reason: '$size');
+      final bottom = tester.getBottomLeft(known).dy;
+      expect(bottom, lessThanOrEqualTo(size.height), reason: '$size');
+      await tester.drag(find.byType(ListView).last, const Offset(0, -150));
+      await tester.pumpAndSettle();
+      expect(tester.getBottomLeft(known).dy, bottom, reason: '$size');
+      expect(tester.takeException(), isNull, reason: '$size');
+    }
+  });
 
   testWidgets('the session is loaded in due mode', (tester) async {
     final app = TestApp(token: 'token');
