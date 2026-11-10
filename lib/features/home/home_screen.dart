@@ -13,6 +13,7 @@ import '../../data/api/api_exception.dart';
 import '../../data/models/subject.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../auth/auth_controller.dart';
+import '../catalog/catalog_favorites.dart';
 import '../profile/profile_screen.dart';
 import 'widgets/subject_card.dart';
 
@@ -30,11 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _busy = true;
   ApiException? _error;
   List<Subject> _subjects = const [];
+  late final _favorites = CatalogFavorites(
+    context.read<AuthController>().user!.id,
+    FavoriteKind.subject,
+  );
 
   @override
   void initState() {
     super.initState();
+    _favorites.restore();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _favorites.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -237,35 +249,48 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return [
-      GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _subjects.length,
-        // A fixed column count plus an aspect ratio makes every card as tall as
-        // half the viewport is wide, which is fine on a phone and absurd on a
-        // desktop browser. Sizing by extent keeps the card the same height
-        // everywhere and simply fits more columns on a wide screen.
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 220,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: 160,
-        ),
-        itemBuilder: (context, index) {
-          final subject = _subjects[index];
-          return SubjectCard(
-            subject: subject,
-            index: index,
-            // The name rides along so the deck list can title itself without a second request.
-            onTap:
-                () => context.push(
+      ListenableBuilder(
+        listenable: _favorites,
+        builder: (context, _) {
+          final subjects = _favorites.ordered(
+            _subjects,
+            (subject) => subject.id,
+          );
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: subjects.length,
+            // A fixed column count plus an aspect ratio makes every card as tall as
+            // half the viewport is wide, which is fine on a phone and absurd on a
+            // desktop browser. Sizing by extent keeps the card the same height
+            // everywhere and simply fits more columns on a wide screen.
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 160,
+            ),
+            itemBuilder: (context, index) {
+              final subject = subjects[index];
+              return SubjectCard(
+                key: ValueKey(subject.id),
+                subject: subject,
+                favorite: CatalogFavoriteButton(
+                  favorites: _favorites,
+                  id: subject.id,
+                  name: subject.name,
+                ),
+                index: index,
+                // The name rides along so the deck list can title itself without a second request.
+                onTap: () => context.push(
                   AppRoutes.decksFor(subject.id),
                   extra: subject.name,
                 ),
+              );
+            },
           );
         },
       ),
     ];
   }
 }
-

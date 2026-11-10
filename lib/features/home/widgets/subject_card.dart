@@ -11,12 +11,14 @@ class SubjectCard extends StatelessWidget {
     super.key,
     required this.subject,
     this.onTap,
+    required this.favorite,
     this.index = 0,
   });
 
   final Subject subject;
   final VoidCallback? onTap;
   final int index;
+  final Widget favorite;
 
   @override
   Widget build(BuildContext context) {
@@ -24,83 +26,89 @@ class SubjectCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          elevation: 0,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary.withValues(alpha: 0.15),
-                      colorScheme.primary.withValues(alpha: 0.05),
+              InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              colorScheme.primary.withValues(alpha: 0.15),
+                              colorScheme.primary.withValues(alpha: 0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Icon(
+                          LucideIcons.bookOpen,
+                          color: colorScheme.primary,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        subject.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      if (description != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      Text(
+                        subject.deckCount == 0
+                            ? 'Chưa có bộ đề'
+                            : '${subject.deckCount} bộ đề',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colorScheme.secondary,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.2),
                   ),
                 ),
-                child: Icon(LucideIcons.bookOpen, color: colorScheme.primary, size: 22),
               ),
-              const SizedBox(height: 12),
-              Text(
-                subject.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (description != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
-                ),
-              ],
-              const Spacer(),
-              Row(
-                children: [
-                  Icon(
-                    LucideIcons.layers,
-                    size: 13,
-                    color: colorScheme.secondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    subject.deckCount == 0 ? 'Chưa có bộ đề' : '${subject.deckCount} bộ đề',
-                    style: TextStyle(
-                      color: colorScheme.secondary,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+              Positioned(top: 4, right: 4, child: favorite),
             ],
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(duration: 350.ms, delay: (60 * (index % 6)).ms)
         .scale(

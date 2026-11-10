@@ -8,6 +8,8 @@ import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/deck.dart';
 import '../../data/repositories/catalog_repository.dart';
+import '../auth/auth_controller.dart';
+import '../catalog/catalog_favorites.dart';
 
 /// The decks inside one subject. [subjectName] comes from the Home grid as
 /// `extra`; a deep link has none, so the title falls back to a generic one.
@@ -25,11 +27,22 @@ class _DeckListScreenState extends State<DeckListScreen> {
   bool _busy = true;
   ApiException? _error;
   List<Deck> _decks = const [];
+  late final _favorites = CatalogFavorites(
+    context.read<AuthController>().user!.id,
+    FavoriteKind.deck,
+  );
 
   @override
   void initState() {
     super.initState();
+    _favorites.restore();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _favorites.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -58,7 +71,11 @@ class _DeckListScreenState extends State<DeckListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.subjectName ?? 'Bộ đề')),
-      body: RefreshIndicator(onRefresh: _load, child: _body()),
+      body: ListenableBuilder(
+        listenable: _favorites,
+        builder: (context, _) =>
+            RefreshIndicator(onRefresh: _load, child: _body()),
+      ),
     );
   }
 
@@ -97,25 +114,46 @@ class _DeckListScreenState extends State<DeckListScreen> {
       );
     }
 
+    final decks = _favorites.ordered(_decks, (deck) => deck.id);
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: _decks.length,
+      itemCount: decks.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final deck = _decks[index];
+        final deck = decks[index];
         return Card(
+          key: ValueKey(deck.id),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  deck.title,
-                  style: Theme.of(context).textTheme.titleMedium,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            deck.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _subtitleFor(deck),
+                            style: TextStyle(color: variantColor),
+                          ),
+                        ],
+                      ),
+                    ),
+                    CatalogFavoriteButton(
+                      favorites: _favorites,
+                      id: deck.id,
+                      name: deck.title,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(_subtitleFor(deck), style: TextStyle(color: variantColor)),
                 if (deck.cardCount > 0) ...[
                   const SizedBox(height: 12),
                   Wrap(
