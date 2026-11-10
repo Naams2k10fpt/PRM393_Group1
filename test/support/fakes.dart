@@ -209,13 +209,11 @@ class FakeCatalogRepository implements CatalogRepository {
     if (decksError != null) throw decksError!;
     return deckList.firstWhere(
       (deck) => deck.id == deckId,
-      orElse:
-          () =>
-              throw const ApiException(
-                code: 'deck_not_found',
-                message: 'Không tìm thấy bộ đề.',
-                statusCode: 404,
-              ),
+      orElse: () => throw const ApiException(
+        code: 'deck_not_found',
+        message: 'Không tìm thấy bộ đề.',
+        statusCode: 404,
+      ),
     );
   }
 }
@@ -235,6 +233,7 @@ class FakeFlashcardRepository implements FlashcardRepository {
   ApiException? reviewError;
   Future<void>? reviewGate;
   final reviews = <({String questionId, bool remembered})>[];
+  final reviewIds = <String?>[];
   final calls = <String>[];
   final _progress = <String, FlashcardProgress>{};
 
@@ -276,8 +275,10 @@ class FakeFlashcardRepository implements FlashcardRepository {
     required String deckId,
     required String questionId,
     required bool remembered,
+    String? reviewId,
   }) async {
     calls.add('review:$questionId:$remembered');
+    reviewIds.add(reviewId);
     if (reviewGate case final gate?) await gate;
     if (reviewError != null) throw reviewError!;
     reviews.add((questionId: questionId, remembered: remembered));

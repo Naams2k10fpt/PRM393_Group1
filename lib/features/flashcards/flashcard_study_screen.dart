@@ -7,24 +7,14 @@ import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/flashcard.dart';
 import '../../data/repositories/flashcard_repository.dart';
+import '../auth/auth_controller.dart';
+import 'flashcard_review_queue.dart';
 import 'widgets/study_card.dart';
 import 'widgets/swipe_to_mark.dart';
 
 enum _StudyMode { due, all, missed }
 
-/// One card whose review the backend has not accepted yet.
-class _PendingReview {
-  const _PendingReview(this.questionId, this.remembered);
-
-  final String questionId;
-  final bool remembered;
-}
-
-/// Study one deck, a card at a time: reveal choices, then swipe or mark recall.
-///
-/// Each answer is sent on its own, because the backend keeps a spaced-repetition
-/// schedule per card. A review that fails goes into [_pending] and the summary
-/// offers to send it again.
+/// Study a deck, with reviews written locally before being sent to the server.
 class FlashcardStudyScreen extends StatefulWidget {
   const FlashcardStudyScreen({super.key, required this.deckId, this.deckTitle});
 
@@ -36,7 +26,7 @@ class FlashcardStudyScreen extends StatefulWidget {
 }
 
 class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
-  bool _busy = false;
+  bool _busy = true;
   ApiException? _error;
 
   FlashcardSession? _session;
@@ -46,24 +36,43 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   int _knownCount = 0;
   int _missedCount = 0;
 
-  final _pending = <_PendingReview>[];
-  bool _retrying = false;
-  int _saving = 0;
+  final _pending = <PendingFlashcardReview>[];
+  late final AuthController _auth;
+  late final String _userId;
+  late final FlashcardReviewQueue _queue;
+  bool _persisting = false;
+  bool _syncing = false;
+  String? _storageError;
 
   _StudyMode _mode = _StudyMode.due;
 
   bool get _finished => _cards.isNotEmpty && _index >= _cards.length;
-  bool get _syncing => _saving > 0 || _retrying;
-  bool get _canLoad => !_busy && !_syncing && _pending.isEmpty;
+  bool get _canLoad => !_busy && !_persisting && !_syncing && _pending.isEmpty;
 
   @override
   void initState() {
     super.initState();
-    _load(_mode);
+    _auth = context.read<AuthController>();
+    _userId = _auth.user!.id;
+    _queue = FlashcardReviewQueue(_userId, widget.deckId);
+    _restore();
   }
 
-  Future<void> _load(_StudyMode mode) async {
-    if (!_canLoad) return;
+  Future<void> _restore() async {
+    try {
+      final pending = await _queue.read();
+      if (!mounted) return;
+      _pending.addAll(pending);
+      await _sync();
+    } catch (_) {
+      if (!mounted) return;
+      _storageError = 'Không đọc được tiến độ đã lưu trên thiết bị.';
+    }
+    if (mounted) await _load(_mode, refresh: true);
+  }
+
+  Future<void> _load(_StudyMode mode, {bool refresh = false}) async {
+    if (!refresh && !_canLoad) return;
     final repository = context.read<FlashcardRepository>();
     setState(() {
       _mode = mode;
@@ -79,11 +88,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       setState(() {
         _session = session;
         // A zero repetition on an existing progress record is a missed review.
-        _cards = mode == _StudyMode.missed
-            ? session.cards
-                  .where((card) => card.progress?.repetition == 0)
-                  .toList()
-            : session.cards;
+        final pendingIds = _pending.map((review) => review.questionId).toSet();
+        _cards = [
+          for (final card in session.cards)
+            if (!pendingIds.contains(card.questionId) &&
+                (mode != _StudyMode.missed || card.progress?.repetition == 0))
+              card,
+        ];
         _index = 0;
         _knownCount = 0;
         _missedCount = 0;
@@ -98,51 +109,74 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     }
   }
 
-  /// Advances straight away and sends the review behind the scenes, so the
-  /// learner is never waiting on the network between cards.
-  void _answer(String questionId, bool remembered) {
+  Future<bool> _answer(String questionId, bool remembered) async {
     if (_busy ||
+        _persisting ||
         _index >= _cards.length ||
         _cards[_index].questionId != questionId) {
-      return;
+      return false;
     }
     setState(() {
+      _persisting = true;
+      _storageError = null;
+    });
+    late final PendingFlashcardReview review;
+    try {
+      review = PendingFlashcardReview.create(questionId, remembered);
+      await _queue.add(review);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _persisting = false;
+          _storageError = 'Không lưu được trên thiết bị. Hãy đánh dấu lại.';
+        });
+      }
+      return false;
+    }
+    if (!mounted) return true;
+    setState(() {
+      _persisting = false;
+      _pending.add(review);
       remembered ? _knownCount++ : _missedCount++;
       _index++;
     });
-    _send(_PendingReview(questionId, remembered));
+    _sync();
+    return true;
   }
 
-  Future<void> _send(_PendingReview review) async {
+  Future<void> _sync() async {
+    if (_pending.isEmpty || _syncing) return;
     final repository = context.read<FlashcardRepository>();
-    setState(() => _saving++);
+    setState(() => _syncing = true);
     try {
-      await repository.review(
-        deckId: widget.deckId,
-        questionId: review.questionId,
-        remembered: review.remembered,
-      );
-    } on ApiException {
-      if (!mounted) return;
-      setState(() => _pending.add(review));
+      while (mounted && _auth.user?.id == _userId && _pending.isNotEmpty) {
+        final review = _pending.first;
+        try {
+          await repository.review(
+            deckId: widget.deckId,
+            questionId: review.questionId,
+            remembered: review.remembered,
+            reviewId: review.id,
+          );
+        } on ApiException catch (error) {
+          // A removed question cannot be reviewed again.
+          if (error.code != 'question_not_found') break;
+        }
+        await _queue.remove(review.id);
+        if (mounted) setState(() => _pending.removeAt(0));
+      }
+    } catch (_) {
+      // Leave the review queued if removing it from local storage failed.
     } finally {
-      if (mounted) setState(() => _saving--);
+      if (mounted) setState(() => _syncing = false);
     }
   }
 
   Future<void> _retryPending() async {
-    if (_pending.isEmpty || _syncing) return;
-    final queued = List.of(_pending);
-    setState(() {
-      _retrying = true;
-      _pending.clear();
-    });
-    for (final review in queued) {
-      if (!mounted) return;
-      await _send(review);
+    await _sync();
+    if (mounted && _cards.isEmpty && _pending.isEmpty) {
+      await _load(_mode, refresh: true);
     }
-    if (!mounted) return;
-    setState(() => _retrying = false);
   }
 
   @override
@@ -181,12 +215,17 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     if (error != null) {
       return Padding(
         padding: const EdgeInsets.all(16),
-        child: ErrorBanner(
-          message: error.message,
-          action: TextButton(
-            onPressed: () => _load(_mode),
-            child: const Text('Thử lại'),
-          ),
+        child: ListView(
+          children: [
+            ErrorBanner(
+              message: error.message,
+              action: TextButton(
+                onPressed: () => _load(_mode, refresh: true),
+                child: const Text('Thử lại'),
+              ),
+            ),
+            _syncStatus(),
+          ],
         ),
       );
     }
@@ -203,6 +242,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     final message = switch (_mode) {
       _StudyMode.missed => 'Chưa có câu nào được đánh dấu chưa thuộc.',
       _ when hasCardsNotDue => 'Bạn đã ôn hết thẻ đến hạn hôm nay.',
+      _ when _pending.isNotEmpty => 'Đang chờ đồng bộ các thẻ đã đánh dấu.',
       _ => 'Bộ đề này chưa có thẻ nào.',
     };
 
@@ -227,10 +267,11 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
+            _syncStatus(),
             if (hasCardsNotDue) ...[
               const SizedBox(height: 20),
               FilledButton.icon(
-                onPressed: () => _load(_StudyMode.all),
+                onPressed: _canLoad ? () => _load(_StudyMode.all) : null,
                 icon: const Icon(LucideIcons.bookOpen),
                 label: Text('Ôn trước cả $total thẻ'),
               ),
@@ -238,7 +279,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             ],
             if (studyingMissed)
               TextButton(
-                onPressed: () => _load(_StudyMode.due),
+                onPressed: _canLoad ? () => _load(_StudyMode.due) : null,
                 child: const Text('Học thẻ đến hạn'),
               ),
           ],
@@ -322,7 +363,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   foregroundColor: missedColor,
                   minimumSize: const Size.fromHeight(48),
                 ),
-                onPressed: () => _answer(card.questionId, false),
+                onPressed: _persisting
+                    ? null
+                    : () => _answer(card.questionId, false),
                 icon: const Icon(LucideIcons.arrowLeft),
                 label: const Text('Chưa thuộc'),
               ),
@@ -335,7 +378,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   foregroundColor: AppDarkColors.background,
                   minimumSize: const Size.fromHeight(48),
                 ),
-                onPressed: () => _answer(card.questionId, true),
+                onPressed: _persisting
+                    ? null
+                    : () => _answer(card.questionId, true),
                 icon: const Icon(LucideIcons.arrowRight),
                 iconAlignment: IconAlignment.end,
                 label: const Text('Đã thuộc'),
@@ -354,7 +399,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   );
 
   Widget _syncStatus({bool showSaving = true}) {
-    if (_pending.isNotEmpty && !_retrying) {
+    if (_storageError case final message?) {
+      return ErrorBanner(message: message);
+    }
+    if (_pending.isNotEmpty && !_syncing) {
       return ErrorBanner(
         message: 'Có ${_pending.length} thẻ chưa lưu được tiến độ.',
         action: TextButton(
@@ -363,10 +411,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         ),
       );
     }
-    if (_retrying || (showSaving && _saving > 0)) {
+    if (showSaving && _syncing) {
       return Padding(
         padding: const EdgeInsets.only(top: 8),
-        child: Text(_retrying ? 'Đang gửi lại...' : 'Đang lưu tiến độ...'),
+        child: const Text('Đang lưu tiến độ...'),
       );
     }
     return const SizedBox.shrink();

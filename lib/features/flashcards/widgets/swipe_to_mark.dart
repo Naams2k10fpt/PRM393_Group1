@@ -14,7 +14,7 @@ class SwipeToMark extends StatefulWidget {
   });
 
   final Widget child;
-  final ValueChanged<bool> onMarked;
+  final Future<bool> Function(bool) onMarked;
   final Color rememberedColor;
   final Color missedColor;
 
@@ -55,7 +55,10 @@ class _SwipeToMarkState extends State<SwipeToMark>
       }
     }
 
-    if (commit && mounted) widget.onMarked(remembered);
+    if (commit && mounted && !await widget.onMarked(remembered) && mounted) {
+      _committing = false;
+      await _settle(width, commit: false);
+    }
   }
 
   @override

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_management_mobile/data/models/flashcard.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../support/fakes.dart';
 
 /// Home -> subject -> deck -> study, the way a user gets there.
@@ -23,6 +25,7 @@ Finder visibleFaceText(String text) => find.descendant(
 );
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets(
     'each choice flips independently while the question stays in place',
     (tester) async {
@@ -219,6 +222,32 @@ void main() {
 
     expect(find.textContaining('chưa lưu được'), findsNothing);
     expect(flashcards.reviews, hasLength(2));
+  });
+
+  testWidgets('closing and reopening sends the same queued review', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardRepository()..reviewError = offline;
+    await openStudyScreen(
+      tester,
+      TestApp(token: 'token', flashcards: flashcards),
+    );
+
+    await tester.tap(find.text('Chưa thuộc'));
+    await tester.pumpAndSettle();
+    final queuedId = flashcards.reviewIds.single;
+    expect(queuedId, matches(RegExp(r'^[0-9a-f-]{36}$')));
+    expect(flashcards.reviews, isEmpty);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    flashcards.reviewError = null;
+    await tester.tap(find.text('Flutter cơ bản'));
+    await tester.pumpAndSettle();
+
+    expect(flashcards.reviewIds, [queuedId, queuedId]);
+    expect(flashcards.reviews.single.remembered, isFalse);
+    expect(find.textContaining('chưa lưu được'), findsNothing);
   });
 
   testWidgets('a long swipe right marks the card as remembered', (
