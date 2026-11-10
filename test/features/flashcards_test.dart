@@ -188,13 +188,13 @@ void main() {
 
     await tester.tap(find.text('Học thẻ đến hạn'));
     await tester.pumpAndSettle();
-    expect(find.text('Bạn đã ôn hết thẻ đến hạn hôm nay.'), findsOneWidget);
+    expect(find.text('Đã ôn xong thẻ đến hạn'), findsOneWidget);
 
     flashcards.cards = [
       ...demoFlashcards,
       const Flashcard(questionId: '102', content: 'Một câu mới'),
     ];
-    await tester.tap(find.text('Ôn câu chưa thuộc'));
+    await tester.tap(find.text('Ôn thẻ chưa thuộc'));
     await tester.pumpAndSettle();
     expect(flashcards.calls.last, 'session:10:all');
     expect(find.text('1/1'), findsOneWidget);
@@ -352,10 +352,10 @@ void main() {
 
     await openStudyScreen(tester, app);
 
-    expect(find.text('Bạn đã ôn hết thẻ đến hạn hôm nay.'), findsOneWidget);
+    expect(find.text('Đã ôn xong thẻ đến hạn'), findsOneWidget);
 
     flashcards.cards = demoFlashcards;
-    await tester.tap(find.text('Ôn trước cả 20 thẻ'));
+    await tester.tap(find.text('Ôn lại cả bộ (20 thẻ)'));
     await tester.pumpAndSettle();
 
     expect(flashcards.calls, contains('session:10:all'));

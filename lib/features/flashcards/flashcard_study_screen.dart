@@ -237,11 +237,14 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   Widget _nothingToStudy() {
     final total = _session?.totalCards ?? 0;
-    final hasCardsNotDue = _mode == _StudyMode.due && total > 0;
+    final hasCardsNotDue =
+        _mode == _StudyMode.due && total > 0 && _pending.isEmpty;
     final studyingMissed = _mode == _StudyMode.missed;
+    final theme = Theme.of(context);
     final message = switch (_mode) {
       _StudyMode.missed => 'Chưa có câu nào được đánh dấu chưa thuộc.',
-      _ when hasCardsNotDue => 'Bạn đã ôn hết thẻ đến hạn hôm nay.',
+      _ when hasCardsNotDue =>
+        'Bạn có thể ôn lại cả bộ hoặc tập trung vào những thẻ chưa thuộc.',
       _ when _pending.isNotEmpty => 'Đang chờ đồng bộ các thẻ đã đánh dấu.',
       _ => 'Bộ đề này chưa có thẻ nào.',
     };
@@ -249,40 +252,66 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              hasCardsNotDue ? LucideIcons.circleCheck : LucideIcons.layers,
-              size: 44,
-              color: hasCardsNotDue
-                  ? AppColors.success
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(
+                hasCardsNotDue ? LucideIcons.circleCheck : LucideIcons.layers,
+                size: 44,
+                color: hasCardsNotDue
+                    ? (context.isDark
+                          ? AppDarkColors.success
+                          : AppLightColors.success)
+                    : theme.colorScheme.onSurfaceVariant,
               ),
-            ),
-            _syncStatus(),
-            if (hasCardsNotDue) ...[
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: _canLoad ? () => _load(_StudyMode.all) : null,
-                icon: const Icon(LucideIcons.bookOpen),
-                label: Text('Ôn trước cả $total thẻ'),
+              const SizedBox(height: 12),
+              if (hasCardsNotDue) ...[
+                Text(
+                  'Đã ôn xong thẻ đến hạn',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-              _studyMissedButton(),
+              _syncStatus(),
+              if (hasCardsNotDue) ...[
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppDarkColors.accent,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: _canLoad ? () => _load(_StudyMode.all) : null,
+                  icon: const Icon(LucideIcons.bookOpen, size: 18),
+                  label: Text(
+                    'Ôn lại cả bộ ($total thẻ)',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _canLoad ? () => _load(_StudyMode.missed) : null,
+                  icon: const Icon(LucideIcons.bookmark, size: 18),
+                  label: const Text('Ôn thẻ chưa thuộc'),
+                ),
+              ],
+              if (studyingMissed)
+                TextButton(
+                  onPressed: _canLoad ? () => _load(_StudyMode.due) : null,
+                  child: const Text('Học thẻ đến hạn'),
+                ),
             ],
-            if (studyingMissed)
-              TextButton(
-                onPressed: _canLoad ? () => _load(_StudyMode.due) : null,
-                child: const Text('Học thẻ đến hạn'),
-              ),
-          ],
+          ),
         ),
       ),
     );
@@ -409,12 +438,6 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       ],
     );
   }
-
-  Widget _studyMissedButton() => OutlinedButton.icon(
-    onPressed: _canLoad ? () => _load(_StudyMode.missed) : null,
-    icon: const Icon(LucideIcons.bookmark),
-    label: const Text('Ôn câu chưa thuộc'),
-  );
 
   Widget _syncStatus({bool showSaving = true}) {
     if (_storageError case final message?) {
