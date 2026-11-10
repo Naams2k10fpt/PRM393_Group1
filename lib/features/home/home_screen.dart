@@ -112,7 +112,38 @@ class _HomeScreenState extends State<HomeScreen> {
               ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
               const SizedBox(height: 18),
             ],
-              if (context.read<AppUpdates?>() != null) const AppUpdateNotice(),
+            if (context.read<AppUpdates?>() != null) const AppUpdateNotice(),
+            Text('Môn học', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            ..._subjectSection(),
+            const SizedBox(height: 24),
+            Text('Tiện ích học tập', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(LucideIcons.bookOpen, color: Theme.of(context).colorScheme.primary, size: 22),
+                ),
+                title: const Text('Quiz cá nhân', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () => context.push(AppRoutes.quiz),
+              ),
+            ).animate().fadeIn(duration: 350.ms, delay: 140.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
+            const SizedBox(height: 4),
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -157,31 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(LucideIcons.bookOpen, color: Theme.of(context).colorScheme.primary, size: 22),
-                ),
-                title: const Text('Quiz cá nhân', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => context.push(AppRoutes.quiz),
-              ),
-            ).animate().fadeIn(duration: 350.ms, delay: 140.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
-            const SizedBox(height: 4),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
                     color: Colors.teal.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -193,10 +199,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () => context.push(AppRoutes.groups),
               ),
             ).animate().fadeIn(duration: 350.ms, delay: 200.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
-                const SizedBox(height: 24),
-                Text('Môn học', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 12),
-                ..._subjectSection(),
               ],
             ),
           ),

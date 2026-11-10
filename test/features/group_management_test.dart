@@ -7,6 +7,7 @@ import '../support/tv3_fakes.dart';
 
 Future<void> groups(WidgetTester tester, FakeGroupsRepository repo) async {
   await TestApp(token: 'token', groups: repo).start(tester);
+  await tester.ensureVisible(find.text('Nhóm học'));
   await tester.tap(find.text('Nhóm học'));
   await tester.pumpAndSettle();
 }

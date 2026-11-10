@@ -105,44 +105,43 @@ class _DeckListScreenState extends State<DeckListScreen> {
       itemBuilder: (context, index) {
         final deck = _decks[index];
         return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            title: Text(deck.title),
-            subtitle: Text(
-              _subtitleFor(deck),
-              style: TextStyle(color: variantColor),
-            ),
-            trailing: PopupMenuButton<String>(
-              tooltip: 'Học với bộ đề',
-              onSelected: (action) {
-                if (action == 'quiz') {
-                  context.push(AppRoutes.quizFor(widget.subjectId, deck.id));
-                } else {
-                  context.push(AppRoutes.studyFor(deck.id), extra: deck.title);
-                }
-              },
-              itemBuilder:
-                  (_) => [
-                    const PopupMenuItem(
-                      value: 'study',
-                      child: Text('Học flashcard'),
-                    ),
-                    PopupMenuItem(
-                      value: 'quiz',
-                      enabled: deck.cardCount > 0,
-                      child: const Text('Làm quiz'),
-                    ),
-                  ],
-            ),
-            // The title rides along so the study screen can name itself.
-            onTap:
-                () => context.push(
-                  AppRoutes.studyFor(deck.id),
-                  extra: deck.title,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  deck.title,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
+                const SizedBox(height: 4),
+                Text(_subtitleFor(deck), style: TextStyle(color: variantColor)),
+                if (deck.cardCount > 0) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        onPressed: () => context.push(
+                          AppRoutes.studyFor(deck.id),
+                          extra: deck.title,
+                        ),
+                        icon: const Icon(LucideIcons.layers, size: 18),
+                        label: const Text('Học flashcard'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push(
+                          AppRoutes.quizFor(widget.subjectId, deck.id),
+                        ),
+                        icon: const Icon(LucideIcons.bookOpen, size: 18),
+                        label: const Text('Làm quiz'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },

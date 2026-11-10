@@ -14,6 +14,7 @@ import 'package:quiz_management_mobile/data/repositories/quiz_repository.dart';
 
 Future<void> openQuiz(WidgetTester tester, FakeQuizRepository repo) async {
   await TestApp(token: 'token', quiz: repo).start(tester);
+  await tester.ensureVisible(find.text('Quiz cá nhân'));
   await tester.tap(find.text('Quiz cá nhân'));
   await tester.pumpAndSettle();
 }

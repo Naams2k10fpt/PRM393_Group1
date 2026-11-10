@@ -13,7 +13,7 @@ Future<void> openStudyScreen(WidgetTester tester, TestApp app) async {
   await app.start(tester);
   await tester.tap(find.text('Lập trình di động'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Flutter cơ bản'));
+  await tester.tap(find.text('Học flashcard').first);
   await tester.pumpAndSettle();
 }
 
@@ -268,7 +268,7 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     flashcards.reviewError = null;
-    await tester.tap(find.text('Flutter cơ bản'));
+    await tester.tap(find.text('Học flashcard').first);
     await tester.pumpAndSettle();
 
     expect(flashcards.reviewIds, [queuedId, queuedId]);
