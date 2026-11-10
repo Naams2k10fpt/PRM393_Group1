@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/router/app_router.dart';
 import '../../data/repositories/quiz_repository.dart';
 import '../../data/api/api_exception.dart';
 import '../auth/auth_controller.dart';
@@ -372,6 +374,16 @@ class _QuizScreenState extends State<QuizScreen> {
               ? 'Làm bài'
               : 'Quiz cá nhân',
         ),
+        actions: [
+          if (attempt == null && result == null)
+            TextButton(
+              onPressed: () => context.push(AppRoutes.quizStatistics),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              child: const Text('Thống kê'),
+            ),
+        ],
       ),
       body: busy && attempt == null && result == null
           ? const Center(child: CircularProgressIndicator())

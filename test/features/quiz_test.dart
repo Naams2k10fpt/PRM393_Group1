@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_management_mobile/data/models/quiz_statistics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fakes.dart';
 import '../support/tv3_fakes.dart';
+
 import 'package:quiz_management_mobile/data/repositories/quiz_repository.dart';
 
 Future<void> openQuiz(WidgetTester tester, FakeQuizRepository repo) async {
@@ -41,8 +43,91 @@ String savedDraft() => jsonEncode({
   },
 });
 
+class _StatisticsRepository extends FakeQuizRepository {
+  _StatisticsRepository({this.empty = false, this.fail = false});
+
+  final bool empty;
+  bool fail;
+
+  @override
+  Future<QuizStatistics> statistics() async {
+    if (fail) throw offline;
+    const group = {
+      'attempts': 3,
+      'averagePercentage': 67.2,
+      'bestPercentage': 90,
+      'lastAttemptAt': '2026-11-09T18:00:00Z',
+    };
+    return QuizStatistics.fromJson({
+      'totalAttempts': empty ? 0 : 3,
+      'averagePercentage': empty ? 0 : 67.2,
+      'bestPercentage': empty ? 0 : 90,
+      'passRate': empty ? 0 : 66.7,
+      'recentScores': [
+        if (!empty) ...[
+          {'label': '08/11', 'percentage': 40},
+          {'label': '10/11', 'percentage': 90},
+        ],
+      ],
+      'subjectStats': [
+        if (!empty) {...group, 'name': 'Toán'},
+      ],
+      'deckStats': [
+        if (!empty) {...group, 'name': 'Toán / Đại số'},
+      ],
+    });
+  }
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'statistics shows the web metrics, score trend and both groupings',
+    (tester) async {
+      await openQuiz(tester, _StatisticsRepository());
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Thống kê'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Số bài đã làm'), findsOneWidget);
+      expect(find.text('67.2%'), findsOneWidget);
+      expect(find.text('90%'), findsOneWidget);
+      expect(find.text('66.7%'), findsOneWidget);
+      expect(find.text('Biểu đồ 12 lần làm gần nhất'), findsOneWidget);
+      expect(find.byTooltip('08/11 · 40%\n10/11 · 90%'), findsOneWidget);
+
+      await tester.scrollUntilVisible(find.text('Toán / Đại số'), 150);
+      expect(find.text('Theo môn học'), findsOneWidget);
+      expect(find.text('3 lượt · TB 67.2% · Tốt nhất 90%'), findsOneWidget);
+      expect(find.text('Theo bộ đề'), findsOneWidget);
+      expect(
+        find.text('3 lượt · TB 67.2% · Gần nhất 10/11 01:00'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('statistics can retry and explains when there are no attempts', (
+    tester,
+  ) async {
+    final repo = _StatisticsRepository(empty: true, fail: true);
+    await openQuiz(tester, repo);
+    await tester.tap(find.text('Thống kê'));
+    await tester.pumpAndSettle();
+    expect(find.text(offline.message), findsOneWidget);
+
+    repo.fail = false;
+    await tester.tap(find.text('Thử lại'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Cần ít nhất 2 lần làm bài để vẽ biểu đồ.'),
+      findsOneWidget,
+    );
+    expect(find.text('Chưa có dữ liệu.'), findsNWidgets(2));
+  });
 
   testWidgets(
     'result shows pass status, can retry and submits reports with history context',

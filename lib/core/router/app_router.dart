@@ -13,6 +13,7 @@ import '../../features/profile/change_password_screen.dart';
 import '../../features/profile/edit_profile_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/quiz/quiz_screen.dart';
+import '../../features/quiz/quiz_statistics_screen.dart';
 
 /// Route paths. Use these constants with context.go / context.push instead of string literals.
 class AppRoutes {
@@ -25,6 +26,7 @@ class AppRoutes {
   static const home = '/';
   static const kahoot = '/kahoot';
   static const quiz = '/quiz';
+  static const quizStatistics = '/quiz/statistics';
   static const groups = '/groups';
   static const profile = '/profile';
   static const editProfile = '/profile/edit';
@@ -131,6 +133,12 @@ GoRouter createRouter(AuthController auth) {
                 state.uri.queryParameters['deckId'] ?? '',
               ),
             ),
+        routes: [
+          GoRoute(
+            path: 'statistics',
+            builder: (context, state) => const QuizStatisticsScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.groups,
