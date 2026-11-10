@@ -251,7 +251,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 360),
           child: Column(
@@ -272,7 +272,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 Text(
                   'Bạn đã ôn hết tất cả các thẻ',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge,
+                  style: theme.textTheme.titleLarge?.copyWith(fontSize: 20),
                 ),
                 const SizedBox(height: 8),
               ],
