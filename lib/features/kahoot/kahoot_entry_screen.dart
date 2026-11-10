@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../../core/config/app_config.dart';
 import 'kahoot_colors.dart';
 import 'qr_scanner_screen.dart';
 import 'kahoot_game_screen.dart';
@@ -71,76 +70,6 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
     );
   }
 
-  void _showSettingsDialog() {
-    final urlController = TextEditingController(text: AppConfig.baseUrl);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: KahootColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: KahootColors.border),
-        ),
-        title: const Text(
-          'Cấu hình Server Backend',
-          style: TextStyle(color: KahootColors.textPrimary, fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: urlController,
-          style: const TextStyle(color: KahootColors.textPrimary),
-          decoration: InputDecoration(
-            labelText: 'Server Base URL',
-            labelStyle: const TextStyle(color: KahootColors.textMuted),
-            hintText: 'http://10.0.2.2:8080 hoặc localhost:8080',
-            hintStyle: const TextStyle(color: KahootColors.textDim),
-            filled: true,
-            fillColor: KahootColors.elevated,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: KahootColors.border),
-            ),
-          ),
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: KahootColors.border),
-                    foregroundColor: KahootColors.textMuted,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Hủy'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: KahootColors.accent,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () {
-                    AppConfig.baseUrl = urlController.text.trim();
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Đã lưu URL: ${AppConfig.baseUrl}'),
-                        backgroundColor: KahootColors.success,
-                      ),
-                    );
-                  },
-                  child: const Text('Lưu'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,13 +77,6 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.settings, color: KahootColors.textMuted),
-            tooltip: 'Cài đặt kết nối server',
-            onPressed: _showSettingsDialog,
-          ),
-        ],
       ),
       body: Center(
         child: SingleChildScrollView(
