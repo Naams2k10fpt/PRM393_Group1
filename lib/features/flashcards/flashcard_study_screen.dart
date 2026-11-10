@@ -7,8 +7,10 @@ import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/flashcard.dart';
 import '../../data/repositories/flashcard_repository.dart';
-import 'widgets/flip_card.dart';
+import 'widgets/study_card.dart';
 import 'widgets/swipe_to_mark.dart';
+
+enum _StudyMode { due, all, missed }
 
 /// One card whose review the backend has not accepted yet.
 class _PendingReview {
@@ -18,11 +20,11 @@ class _PendingReview {
   final bool remembered;
 }
 
-/// Study one deck, a card at a time: tap to flip, then swipe or press a button.
+/// Study one deck, a card at a time: reveal choices, then swipe or mark recall.
 ///
 /// Each answer is sent on its own, because the backend keeps a spaced-repetition
 /// schedule per card. A review that fails goes into [_pending] and the summary
-/// offers to send it again, so a flaky connection never loses the session.
+/// offers to send it again.
 class FlashcardStudyScreen extends StatefulWidget {
   const FlashcardStudyScreen({super.key, required this.deckId, this.deckTitle});
 
@@ -34,7 +36,7 @@ class FlashcardStudyScreen extends StatefulWidget {
 }
 
 class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
-  bool _busy = true;
+  bool _busy = false;
   ApiException? _error;
 
   FlashcardSession? _session;
@@ -46,34 +48,45 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   final _pending = <_PendingReview>[];
   bool _retrying = false;
+  int _saving = 0;
 
-  bool _studyAll = false;
+  _StudyMode _mode = _StudyMode.due;
 
   bool get _finished => _cards.isNotEmpty && _index >= _cards.length;
-  int get _answered => _knownCount + _missedCount;
+  bool get _syncing => _saving > 0 || _retrying;
+  bool get _canLoad => !_busy && !_syncing && _pending.isEmpty;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _load(_mode);
   }
 
-  Future<void> _load() async {
+  Future<void> _load(_StudyMode mode) async {
+    if (!_canLoad) return;
     final repository = context.read<FlashcardRepository>();
     setState(() {
+      _mode = mode;
       _busy = true;
       _error = null;
     });
     try {
-      final session = await repository.session(widget.deckId, studyAll: _studyAll);
+      final session = await repository.session(
+        widget.deckId,
+        studyAll: mode != _StudyMode.due,
+      );
       if (!mounted) return;
       setState(() {
         _session = session;
-        _cards = session.cards;
+        // A zero repetition on an existing progress record is a missed review.
+        _cards = mode == _StudyMode.missed
+            ? session.cards
+                  .where((card) => card.progress?.repetition == 0)
+                  .toList()
+            : session.cards;
         _index = 0;
         _knownCount = 0;
         _missedCount = 0;
-        _pending.clear();
         _busy = false;
       });
     } on ApiException catch (error) {
@@ -87,18 +100,22 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   /// Advances straight away and sends the review behind the scenes, so the
   /// learner is never waiting on the network between cards.
-  void _answer(bool remembered) {
-    if (_finished) return;
-    final card = _cards[_index];
+  void _answer(String questionId, bool remembered) {
+    if (_busy ||
+        _index >= _cards.length ||
+        _cards[_index].questionId != questionId) {
+      return;
+    }
     setState(() {
       remembered ? _knownCount++ : _missedCount++;
       _index++;
     });
-    _send(_PendingReview(card.questionId, remembered));
+    _send(_PendingReview(questionId, remembered));
   }
 
   Future<void> _send(_PendingReview review) async {
     final repository = context.read<FlashcardRepository>();
+    setState(() => _saving++);
     try {
       await repository.review(
         deckId: widget.deckId,
@@ -108,34 +125,52 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     } on ApiException {
       if (!mounted) return;
       setState(() => _pending.add(review));
+    } finally {
+      if (mounted) setState(() => _saving--);
     }
   }
 
   Future<void> _retryPending() async {
-    if (_pending.isEmpty || _retrying) return;
+    if (_pending.isEmpty || _syncing) return;
     final queued = List.of(_pending);
     setState(() {
       _retrying = true;
       _pending.clear();
     });
     for (final review in queued) {
+      if (!mounted) return;
       await _send(review);
     }
     if (!mounted) return;
     setState(() => _retrying = false);
   }
 
-  /// Reloads with `mode=all` so the user can revise cards that are not due yet.
-  void _studyEverything() {
-    _studyAll = true;
-    _load();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.deckTitle ?? _session?.deckName ?? 'Học thẻ')),
-      body: SafeArea(child: _body()),
+      appBar: AppBar(
+        title: Text(widget.deckTitle ?? _session?.deckName ?? 'Học thẻ'),
+        actions: [
+          if (_error == null &&
+              _cards.isNotEmpty &&
+              _index == 0 &&
+              _mode != _StudyMode.missed)
+            IconButton(
+              tooltip: 'Ôn câu chưa thuộc',
+              onPressed: _canLoad ? () => _load(_StudyMode.missed) : null,
+              icon: const Icon(LucideIcons.bookmark),
+            ),
+        ],
+      ),
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: _body(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -148,7 +183,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         padding: const EdgeInsets.all(16),
         child: ErrorBanner(
           message: error.message,
-          action: TextButton(onPressed: _load, child: const Text('Thử lại')),
+          action: TextButton(
+            onPressed: () => _load(_mode),
+            child: const Text('Thử lại'),
+          ),
         ),
       );
     }
@@ -159,11 +197,17 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   }
 
   Widget _nothingToStudy() {
-    final session = _session;
-    final hasCardsNotDue = session != null && !session.studyingAll && session.totalCards > 0;
+    final total = _session?.totalCards ?? 0;
+    final hasCardsNotDue = _mode == _StudyMode.due && total > 0;
+    final studyingMissed = _mode == _StudyMode.missed;
+    final message = switch (_mode) {
+      _StudyMode.missed => 'Chưa có câu nào được đánh dấu chưa thuộc.',
+      _ when hasCardsNotDue => 'Bạn đã ôn hết thẻ đến hạn hôm nay.',
+      _ => 'Bộ đề này chưa có thẻ nào.',
+    };
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -171,22 +215,32 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             Icon(
               hasCardsNotDue ? LucideIcons.circleCheck : LucideIcons.layers,
               size: 44,
-              color: hasCardsNotDue ? AppColors.success : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: hasCardsNotDue
+                  ? AppColors.success
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
             Text(
-              hasCardsNotDue ? 'Bạn đã ôn hết thẻ đến hạn hôm nay.' : 'Bộ đề này chưa có thẻ nào.',
+              message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             if (hasCardsNotDue) ...[
               const SizedBox(height: 20),
               FilledButton.icon(
-                onPressed: _studyEverything,
+                onPressed: () => _load(_StudyMode.all),
                 icon: const Icon(LucideIcons.bookOpen),
-                label: Text('Ôn trước cả ${session.totalCards} thẻ'),
+                label: Text('Ôn trước cả $total thẻ'),
               ),
+              _studyMissedButton(),
             ],
+            if (studyingMissed)
+              TextButton(
+                onPressed: () => _load(_StudyMode.due),
+                child: const Text('Học thẻ đến hạn'),
+              ),
           ],
         ),
       ),
@@ -196,184 +250,272 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   Widget _studyView() {
     final card = _cards[_index];
     final total = _cards.length;
-    final answer = card.answerText;
     final theme = Theme.of(context);
+    final knownColor = context.isDark
+        ? AppDarkColors.success
+        : AppLightColors.success;
+    final missedColor = theme.colorScheme.error;
 
-    return Padding(
+    return ListView(
+      key: ValueKey(card.questionId),
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Text('${_index + 1}/$total', style: const TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: _index / total,
-                    minHeight: 8,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: Center(
-              child: SwipeToMark(
-                key: ValueKey('swipe-${card.questionId}'),
-                onMarked: _answer,
-                leftHint: const _SwipeHint(
-                  alignment: Alignment.centerLeft,
-                  color: AppColors.success,
-                  icon: LucideIcons.circleCheck,
-                  label: 'Đã thuộc',
-                ),
-                rightHint: const _SwipeHint(
-                  alignment: Alignment.centerRight,
-                  color: AppColors.danger,
-                  icon: LucideIcons.refreshCw,
-                  label: 'Chưa thuộc',
-                ),
-                child: AspectRatio(
-                  aspectRatio: 3 / 4,
-                  child: FlipCard(
-                    key: ValueKey('card-${card.questionId}'),
-                    front: CardFace(text: card.content, caption: 'Câu hỏi'),
-                    back: CardFace(
-                      text: answer.isEmpty ? '(Chưa có đáp án)' : answer,
-                      caption: 'Đáp án',
-                      footnote: card.correctAnswers.isEmpty ? null : card.explanation,
-                      accent: theme.colorScheme.secondary,
-                    ),
-                  ),
+      children: [
+        if (_mode == _StudyMode.missed) ...[
+          Text('Ôn câu chưa thuộc', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            Text(
+              '${_index + 1}/$total',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: _index / total,
+                  minHeight: 8,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
                 ),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Đã học $_index/$total  ·  Đã thuộc $_knownCount  ·  Chưa thuộc $_missedCount',
+          style: theme.textTheme.bodySmall,
+        ),
+        _syncStatus(showSaving: false),
+        const SizedBox(height: 16),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.85, end: 1),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 140),
+          builder: (context, value, child) =>
+              Opacity(opacity: value, child: child),
+          child: SwipeToMark(
+            onMarked: (remembered) => _answer(card.questionId, remembered),
+            rememberedColor: knownColor,
+            missedColor: missedColor,
+            child: StudyCard(card: card),
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Chạm vào thẻ để lật · vuốt sang hai bên để đánh dấu',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Kéo thẻ sang trái hoặc phải, hoặc chọn nút bên dưới.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 13,
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  onPressed: () => _answer(false),
-                  icon: const Icon(LucideIcons.refreshCw),
-                  label: const Text('Chưa thuộc'),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: missedColor,
+                  minimumSize: const Size.fromHeight(48),
                 ),
+                onPressed: () => _answer(card.questionId, false),
+                icon: const Icon(LucideIcons.arrowLeft),
+                label: const Text('Chưa thuộc'),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  onPressed: () => _answer(true),
-                  icon: const Icon(LucideIcons.check),
-                  label: const Text('Đã thuộc'),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: knownColor,
+                  foregroundColor: AppDarkColors.background,
+                  minimumSize: const Size.fromHeight(48),
                 ),
+                onPressed: () => _answer(card.questionId, true),
+                icon: const Icon(LucideIcons.arrowRight),
+                iconAlignment: IconAlignment.end,
+                label: const Text('Đã thuộc'),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
+  Widget _studyMissedButton() => OutlinedButton.icon(
+    onPressed: _canLoad ? () => _load(_StudyMode.missed) : null,
+    icon: const Icon(LucideIcons.bookmark),
+    label: const Text('Ôn câu chưa thuộc'),
+  );
+
+  Widget _syncStatus({bool showSaving = true}) {
+    if (_pending.isNotEmpty && !_retrying) {
+      return ErrorBanner(
+        message: 'Có ${_pending.length} thẻ chưa lưu được tiến độ.',
+        action: TextButton(
+          onPressed: _syncing ? null : _retryPending,
+          child: const Text('Gửi lại'),
+        ),
+      );
+    }
+    if (_retrying || (showSaving && _saving > 0)) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(_retrying ? 'Đang gửi lại...' : 'Đang lưu tiến độ...'),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
   Widget _summary() {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final recallPercent = (100 * _knownCount / _cards.length).round();
+    final showMissed = _mode != _StudyMode.missed || _missedCount > 0;
+    final dueLabel = _summaryActionLabel(
+      LucideIcons.calendarClock,
+      'Học thẻ đến hạn',
+      'Ôn thẻ mới và thẻ đã đến lịch',
+    );
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         const SizedBox(height: 24),
         const Icon(LucideIcons.award, size: 56, color: AppColors.warning),
         const SizedBox(height: 12),
-        Text('Hoàn thành!', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+        Text(
+          'Hoàn thành!',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: 4),
         Text(
-          'Bạn đã học hết $_answered thẻ.',
+          'Bạn đã học hết ${_cards.length} thẻ.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
+        Text(
+          'Tỷ lệ tự đánh giá đã thuộc $recallPercent%',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _ScoreTile(label: 'Đã thuộc', value: _knownCount, color: AppColors.success)),
+            Expanded(
+              child: _ScoreTile(
+                label: 'Đã thuộc',
+                value: _knownCount,
+                color: context.isDark
+                    ? AppDarkColors.success
+                    : AppLightColors.success,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _ScoreTile(label: 'Chưa thuộc', value: _missedCount, color: AppColors.danger)),
+            Expanded(
+              child: _ScoreTile(
+                label: 'Chưa thuộc',
+                value: _missedCount,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 24),
-        if (_retrying)
-          const Center(child: Padding(padding: EdgeInsets.all(8), child: Text('Đang gửi lại...'))),
-        if (_pending.isNotEmpty && !_retrying)
-          ErrorBanner(
-            message: 'Có ${_pending.length} thẻ chưa lưu được tiến độ.',
-            action: TextButton(onPressed: _retryPending, child: const Text('Gửi lại')),
-          ),
         const SizedBox(height: 16),
-        if (_missedCount > 0)
-          FilledButton.icon(
-            onPressed: _load,
-            icon: const Icon(LucideIcons.rotateCcw),
-            label: const Text('Ôn lại các thẻ đến hạn'),
-          ),
-        const SizedBox(height: 12),
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-          onPressed: () => Navigator.of(context).maybePop(),
-          child: const Text('Về danh sách bộ đề'),
+        _syncStatus(),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text('Bước tiếp theo', style: theme.textTheme.titleSmall),
         ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: context.cyanColor,
+            foregroundColor: AppDarkColors.background,
+            minimumSize: const Size.fromHeight(56),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+          onPressed: _canLoad
+              ? () => _load(showMissed ? _StudyMode.missed : _StudyMode.due)
+              : null,
+          child: showMissed
+              ? _summaryActionLabel(
+                  LucideIcons.bookmark,
+                  'Ôn câu chưa thuộc',
+                  'Ôn ngay các câu đã đánh dấu',
+                )
+              : dueLabel,
+        ),
+        if (showMissed) ...[
+          const SizedBox(height: 8),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              backgroundColor: colors.surface,
+              foregroundColor: colors.onSurface,
+              side: BorderSide(color: colors.outlineVariant),
+              minimumSize: const Size.fromHeight(56),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: _canLoad ? () => _load(_StudyMode.due) : null,
+            child: dueLabel,
+          ),
+        ],
+        const SizedBox(height: 4),
+        TextButton.icon(
+          style: TextButton.styleFrom(
+            foregroundColor: colors.onSurfaceVariant,
+            minimumSize: const Size.fromHeight(48),
+          ),
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(LucideIcons.arrowLeft, size: 18),
+          label: const Text('Về danh sách bộ đề'),
+        ),
+      ],
+    );
+  }
+
+  Widget _summaryActionLabel(IconData icon, String title, String description) {
+    return Row(
+      children: [
+        Icon(icon, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        const Icon(LucideIcons.chevronRight, size: 18),
       ],
     );
   }
 }
 
-/// What shows behind the card while it is being swiped.
-class _SwipeHint extends StatelessWidget {
-  const _SwipeHint({
-    required this.alignment,
-    required this.color,
-    required this.icon,
-    required this.label,
-  });
-
-  final Alignment alignment;
-  final Color color;
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: alignment,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 6),
-          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
 class _ScoreTile extends StatelessWidget {
-  const _ScoreTile({required this.label, required this.value, required this.color});
+  const _ScoreTile({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final int value;
@@ -390,9 +532,22 @@ class _ScoreTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('$value', style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w700)),
+          Text(
+            '$value',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );

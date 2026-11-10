@@ -154,6 +154,19 @@ const demoFlashcards = [
     content: 'Widget trong Flutter là gì?',
     correctAnswers: ['Đơn vị dựng giao diện'],
     explanation: 'Mọi thứ hiển thị đều là widget.',
+    options: [
+      FlashcardOption(
+        id: '1',
+        content: 'Đơn vị dựng giao diện',
+        isCorrect: true,
+      ),
+      FlashcardOption(id: '2', content: 'Một loại biến', isCorrect: false),
+      FlashcardOption(
+        id: '3',
+        content: 'Thành phần tái sử dụng',
+        isCorrect: true,
+      ),
+    ],
   ),
   Flashcard(
     questionId: '101',
@@ -219,8 +232,10 @@ class FakeFlashcardRepository implements FlashcardRepository {
 
   ApiException? loadError;
   ApiException? reviewError;
+  Future<void>? reviewGate;
   final reviews = <({String questionId, bool remembered})>[];
   final calls = <String>[];
+  final _progress = <String, FlashcardProgress>{};
 
   @override
   Future<FlashcardSession> session(
@@ -229,13 +244,29 @@ class FakeFlashcardRepository implements FlashcardRepository {
   }) async {
     calls.add('session:$deckId:${studyAll ? 'all' : 'due'}');
     if (loadError != null) throw loadError!;
+    final available = [
+      for (final card in cards)
+        Flashcard(
+          questionId: card.questionId,
+          content: card.content,
+          questionType: card.questionType,
+          explanation: card.explanation,
+          correctAnswers: card.correctAnswers,
+          options: card.options,
+          progress: _progress[card.questionId] ?? card.progress,
+        ),
+    ];
+    final now = DateTime.now();
+    final due = available
+        .where((card) => card.progress?.nextReviewAtUtc?.isAfter(now) != true)
+        .toList();
     return FlashcardSession(
       deckId: deckId,
       deckName: 'Flutter cơ bản',
       totalCards: totalCards ?? cards.length,
-      dueCards: cards.length,
+      dueCards: due.length,
       studyingAll: studyAll,
-      cards: studyAll ? cards : cards,
+      cards: studyAll ? available : due,
     );
   }
 
@@ -246,12 +277,20 @@ class FakeFlashcardRepository implements FlashcardRepository {
     required bool remembered,
   }) async {
     calls.add('review:$questionId:$remembered');
+    if (reviewGate case final gate?) await gate;
     if (reviewError != null) throw reviewError!;
     reviews.add((questionId: questionId, remembered: remembered));
+    final interval = remembered ? 1440 : 10;
+    final progress = FlashcardProgress(
+      repetition: remembered ? (_progress[questionId]?.repetition ?? 0) + 1 : 0,
+      nextReviewAtUtc: DateTime.now().add(Duration(minutes: interval)),
+    );
+    _progress[questionId] = progress;
     return FlashcardReview(
       questionId: questionId,
-      repetition: 1,
-      intervalMinutes: 10,
+      repetition: progress.repetition,
+      intervalMinutes: interval,
+      nextReviewAtUtc: progress.nextReviewAtUtc,
     );
   }
 }
