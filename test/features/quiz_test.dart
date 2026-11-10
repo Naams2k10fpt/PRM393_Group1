@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_management_mobile/data/models/quiz_statistics.dart';
+import 'package:quiz_management_mobile/data/api/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fakes.dart';
@@ -334,4 +335,31 @@ void main() {
       );
     },
   );
+  testWidgets('server-confirmed expiry clears the draft and stops submission', (
+    tester,
+  ) async {
+    final repo = FakeQuizRepository()
+      ..current = quizAttempt(
+        expiresAt: DateTime.now().toUtc().subtract(const Duration(seconds: 1)),
+      )
+      ..submitError = const ApiException(
+        code: 'attempt_expired',
+        message: 'Đã hết hạn.',
+      );
+    await startQuiz(tester, repo);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bài quiz đã hết hạn'), findsOneWidget);
+    expect(find.text('Nộp bài'), findsNothing);
+    expect(repo.submissions, hasLength(1));
+    expect(
+      (await SharedPreferences.getInstance()).getString('quiz_draft_u1'),
+      isNull,
+    );
+    await tester.tap(find.text('Về trang Quiz'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bắt đầu bài thi'), findsOneWidget);
+  });
+
 }

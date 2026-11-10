@@ -37,6 +37,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool busy = false;
   bool submitting = false;
   bool autoSubmitted = false;
+  bool expired = false;
   bool resumeBlocked = false;
   bool loadingHistory = false;
   bool confirming = false;
@@ -124,7 +125,9 @@ class _QuizScreenState extends State<QuizScreen> {
       });
       _startTicker();
     } on ApiException catch (e) {
-      if (e.code == 'attempt_not_found' || e.code == 'attempt_expired') {
+      if (e.code == 'attempt_expired') {
+        await _expire();
+      } else if (e.code == 'attempt_not_found') {
         await prefs.remove(draftKey);
       } else if (mounted) {
         setState(() {
@@ -254,10 +257,25 @@ class _QuizScreenState extends State<QuizScreen> {
         });
       }
     } catch (e) {
-      _showError(e);
+      if (e is ApiException && e.code == 'attempt_expired') {
+        await _expire();
+      } else {
+        _showError(e);
+      }
     } finally {
       if (mounted) setState(() => submitting = false);
     }
+  }
+
+  Future<void> _expire() async {
+    ticker?.cancel();
+    if (!mounted) return;
+    setState(() {
+      expired = true;
+      attempt = null;
+      selected.clear();
+    });
+    await _writeDraft(null).catchError(_showError);
   }
 
   Future<void> _confirmSubmit() async {
@@ -370,12 +388,14 @@ class _QuizScreenState extends State<QuizScreen> {
         title: Text(
           result != null
               ? 'Kết quả'
+              : expired
+              ? 'Bài quiz đã hết hạn'
               : attempt != null
               ? 'Làm bài'
               : 'Quiz cá nhân',
         ),
         actions: [
-          if (attempt == null && result == null)
+          if (!expired && attempt == null && result == null)
             TextButton(
               onPressed: () => context.push(AppRoutes.quizStatistics),
               style: TextButton.styleFrom(
@@ -385,7 +405,9 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
         ],
       ),
-      body: busy && attempt == null && result == null
+      body: expired
+          ? _expiredView()
+          : busy && attempt == null && result == null
           ? const Center(child: CircularProgressIndicator())
           : result != null
           ? _resultView()
@@ -394,6 +416,39 @@ class _QuizScreenState extends State<QuizScreen> {
           : _entryView(),
     );
   }
+
+  Widget _expiredView() => SafeArea(
+    child: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const Icon(LucideIcons.clock, size: 40),
+            const SizedBox(height: 16),
+            const Text(
+              'Đã hết thời gian nộp bài. Bạn có thể bắt đầu lượt làm mới.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () {
+                if (widget.initialDeckId != null && context.canPop()) {
+                  context.pop();
+                } else {
+                  setState(() => expired = false);
+                }
+              },
+              child: Text(
+                widget.initialDeckId != null && context.canPop()
+                    ? 'Về bộ đề'
+                    : 'Về trang Quiz',
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Widget _entryView() => RefreshIndicator(
     onRefresh: _load,
