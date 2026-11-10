@@ -34,6 +34,10 @@ void main() {
     await tester.tap(otherSubject);
     await tester.pumpAndSettle();
     await tester.ensureVisible(deckStar);
+    await tester.tapAt(tester.getCenter(deckStar) - const Offset(21, 0));
+    await tester.pumpAndSettle();
+    expect(deckUnstar, findsNothing);
+
     await tester.tap(deckStar);
     await tester.pumpAndSettle();
     expect(deckUnstar, findsOneWidget);

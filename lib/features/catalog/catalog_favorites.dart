@@ -84,6 +84,11 @@ class CatalogFavoriteButton extends StatelessWidget {
     final selected = favorites.contains(id);
     final theme = Theme.of(context);
     return IconButton(
+      style: IconButton.styleFrom(
+        minimumSize: const Size.square(36),
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
       tooltip: selected ? 'Bỏ yêu thích: $name' : 'Yêu thích: $name',
       isSelected: selected,
       icon: Icon(
