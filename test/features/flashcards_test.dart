@@ -188,7 +188,7 @@ void main() {
 
     await tester.tap(find.text('Học thẻ đến hạn'));
     await tester.pumpAndSettle();
-    expect(find.text('Đã ôn xong thẻ đến hạn'), findsOneWidget);
+    expect(find.text('Bạn đã ôn hết tất cả các thẻ'), findsOneWidget);
 
     flashcards.cards = [
       ...demoFlashcards,
@@ -352,7 +352,7 @@ void main() {
 
     await openStudyScreen(tester, app);
 
-    expect(find.text('Đã ôn xong thẻ đến hạn'), findsOneWidget);
+    expect(find.text('Bạn đã ôn hết tất cả các thẻ'), findsOneWidget);
 
     flashcards.cards = demoFlashcards;
     await tester.tap(find.text('Ôn lại cả bộ (20 thẻ)'));

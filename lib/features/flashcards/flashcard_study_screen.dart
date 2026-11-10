@@ -270,7 +270,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               const SizedBox(height: 12),
               if (hasCardsNotDue) ...[
                 Text(
-                  'Đã ôn xong thẻ đến hạn',
+                  'Bạn đã ôn hết tất cả các thẻ',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleLarge,
                 ),
