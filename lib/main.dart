@@ -108,7 +108,12 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
             builder: (context, child) {
               return Stack(
                 children: [
-                  const Positioned.fill(child: AcademicAmbientBackground()),
+                  const Positioned.fill(
+                    child: AcademicAmbientBackground(
+                      animate: false,
+                      showRunes: false,
+                    ),
+                  ),
                   if (child != null) child,
                 ],
               );

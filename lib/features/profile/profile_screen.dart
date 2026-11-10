@@ -71,7 +71,8 @@ class ProfileScreen extends StatelessWidget {
                     final isDark = mode == ThemeMode.dark;
                     return SwitchListTile(
                       secondary: Icon(isDark ? LucideIcons.moon : LucideIcons.sun),
-                      title: const Text('Giao diện tối (Dark Mode)'),
+                      title: const Text('Giao diện tối'),
+                      subtitle: const Text('Phòng chơi Kahoot luôn dùng nền tối.'),
                       value: isDark,
                       onChanged: (_) => AppTheme.toggleTheme(),
                     );

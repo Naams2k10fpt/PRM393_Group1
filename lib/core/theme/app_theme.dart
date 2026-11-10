@@ -55,7 +55,7 @@ extension AppThemeContextExtension on BuildContext {
 }
 
 /// App-wide theme. Feature screens use Theme.of(context) instead of hard-coded colours;
-/// only the Kahoot screens keep their own KahootColors palette.
+/// the live Kahoot game keeps its own dark palette.
 class AppTheme {
   AppTheme._();
 
@@ -122,8 +122,12 @@ class AppTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFFB9A8FF)),
+      ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFB9A8FF),
           minimumSize: const Size.fromHeight(48),
           side: const BorderSide(color: Color(0x33818CF8)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -207,8 +211,12 @@ class AppTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFF4F46C7)),
+      ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF4F46C7),
           minimumSize: const Size.fromHeight(48),
           side: const BorderSide(color: Color(0x336366F1)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/config/app_updates.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_update_widgets.dart';
 import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/form_widgets.dart';
@@ -68,17 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const BrandLogo(size: 32, showText: true),
         actions: [
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: AppTheme.themeModeNotifier,
-            builder: (context, mode, _) {
-              final isDark = mode == ThemeMode.dark;
-              return IconButton(
-                tooltip: isDark ? 'Chế độ Sáng' : 'Chế độ Tối',
-                icon: Icon(isDark ? LucideIcons.sun : LucideIcons.moon),
-                onPressed: AppTheme.toggleTheme,
-              );
-            },
-          ),
           if (user != null)
             IconButton(
               tooltip: 'Hồ sơ',

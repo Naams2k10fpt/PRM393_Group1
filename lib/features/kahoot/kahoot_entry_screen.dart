@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'qr_scanner_screen.dart';
+import '../../core/theme/app_theme.dart';
 import 'kahoot_game_screen.dart';
 
 class KahootEntryScreen extends StatefulWidget {
@@ -50,8 +51,10 @@ class _KahootEntryScreenState extends State<KahootEntryScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            KahootGameScreen(roomCode: pin, nickname: nickname),
+        builder: (context) => Theme(
+          data: AppTheme.dark(),
+          child: KahootGameScreen(roomCode: pin, nickname: nickname),
+        ),
       ),
     );
   }
