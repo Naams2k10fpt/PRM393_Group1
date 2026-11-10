@@ -180,9 +180,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
   }
 
   Future<void> _loadChannels() async {
-    final loaded = await repo.channels(widget.group.id);
-    final loadedVoice = await repo.voiceChannels(widget.group.id);
+    final available = await repo.channels(widget.group.id);
     if (!mounted) return;
+    final loaded = available.where((item) => item.kind == 0).toList();
+    final loadedVoice = available.where((item) => item.kind == 1).toList();
     setState(() {
       voiceChannels = loadedVoice;
       voiceChannel = loadedVoice

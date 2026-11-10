@@ -66,17 +66,6 @@ class GroupsRepository {
 
   Future<List<ChatChannel>> channels(int id) async =>
       (await api.get('/api/groups/$id/channels') as List)
-          // Text timelines never receive a voice channel ID.
-          .where((item) => ((item as Map)['kind'] as int? ?? 0) == 0)
-          .map(
-            (item) =>
-                ChatChannel.fromJson(Map<String, dynamic>.from(item as Map)),
-          )
-          .toList();
-
-  Future<List<ChatChannel>> voiceChannels(int id) async =>
-      (await api.get('/api/groups/$id/channels') as List)
-          .where((item) => (item as Map)['kind'] == 1)
           .map((item) => ChatChannel.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList();
 
