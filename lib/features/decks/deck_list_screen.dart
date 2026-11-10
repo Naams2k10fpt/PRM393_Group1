@@ -163,8 +163,8 @@ class _DeckListScreenState extends State<DeckListScreen> {
                     children: [
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: context.cyanColor,
-                          foregroundColor: AppDarkColors.background,
+                          backgroundColor: AppDarkColors.accent,
+                          foregroundColor: Colors.white,
                         ),
                         onPressed: () => context.push(
                           AppRoutes.studyFor(deck.id),
