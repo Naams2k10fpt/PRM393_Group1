@@ -222,9 +222,6 @@ class FakeGroupsRepository extends GroupsRepository {
   final calls = <String>[];
 
   @override
-  Future<List<ChatChannel>> voiceChannels(int id) async => [];
-
-  @override
   Future<List<ChatChannel>> channels(int id) async => [
     ChatChannel.fromJson({
       'id': 1,

@@ -32,9 +32,8 @@ class FlashcardProgress {
 
 /// A card to study. Mirrors `ApiFlashcard` in PRN232.
 ///
-/// A card is a question: [content] is the front, [correctAnswers] and
-/// [explanation] the back. Both are Markdown on the backend; the study screen
-/// renders them as plain text for now.
+/// The study screen keeps [content] visible while revealing each of [options].
+/// Older cards without options use [correctAnswers] and [explanation] instead.
 class Flashcard {
   const Flashcard({
     required this.questionId,
@@ -54,7 +53,7 @@ class Flashcard {
   final List<FlashcardOption> options;
   final FlashcardProgress? progress;
 
-  /// The back of the card, as one block of text.
+  /// The fallback answer for a card without choices.
   String get answerText =>
       correctAnswers.isEmpty ? (explanation ?? '') : correctAnswers.join('\n');
 

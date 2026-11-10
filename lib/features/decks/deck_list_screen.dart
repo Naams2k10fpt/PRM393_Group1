@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/router/app_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/deck.dart';
 import '../../data/repositories/catalog_repository.dart';
+import '../auth/auth_controller.dart';
+import '../catalog/catalog_favorites.dart';
 
 /// The decks inside one subject. [subjectName] comes from the Home grid as
 /// `extra`; a deep link has none, so the title falls back to a generic one.
@@ -25,11 +28,22 @@ class _DeckListScreenState extends State<DeckListScreen> {
   bool _busy = true;
   ApiException? _error;
   List<Deck> _decks = const [];
+  late final _favorites = CatalogFavorites(
+    context.read<AuthController>().user!.id,
+    FavoriteKind.deck,
+  );
 
   @override
   void initState() {
     super.initState();
+    _favorites.restore();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _favorites.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -58,7 +72,11 @@ class _DeckListScreenState extends State<DeckListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.subjectName ?? 'Bộ đề')),
-      body: RefreshIndicator(onRefresh: _load, child: _body()),
+      body: ListenableBuilder(
+        listenable: _favorites,
+        builder: (context, _) =>
+            RefreshIndicator(onRefresh: _load, child: _body()),
+      ),
     );
   }
 
@@ -97,52 +115,76 @@ class _DeckListScreenState extends State<DeckListScreen> {
       );
     }
 
+    final decks = _favorites.ordered(_decks, (deck) => deck.id);
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: _decks.length,
+      itemCount: decks.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final deck = _decks[index];
+        final deck = decks[index];
         return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            title: Text(deck.title),
-            subtitle: Text(
-              _subtitleFor(deck),
-              style: TextStyle(color: variantColor),
-            ),
-            trailing: PopupMenuButton<String>(
-              tooltip: 'Học với bộ đề',
-              onSelected: (action) {
-                if (action == 'quiz') {
-                  context.push(AppRoutes.quizFor(widget.subjectId, deck.id));
-                } else {
-                  context.push(AppRoutes.studyFor(deck.id), extra: deck.title);
-                }
-              },
-              itemBuilder:
-                  (_) => [
-                    const PopupMenuItem(
-                      value: 'study',
-                      child: Text('Học flashcard'),
+          key: ValueKey(deck.id),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            deck.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _subtitleFor(deck),
+                            style: TextStyle(color: variantColor),
+                          ),
+                        ],
+                      ),
                     ),
-                    PopupMenuItem(
-                      value: 'quiz',
-                      enabled: deck.cardCount > 0,
-                      child: const Text('Làm quiz'),
+                    CatalogFavoriteButton(
+                      favorites: _favorites,
+                      id: deck.id,
+                      name: deck.title,
                     ),
                   ],
-            ),
-            // The title rides along so the study screen can name itself.
-            onTap:
-                () => context.push(
-                  AppRoutes.studyFor(deck.id),
-                  extra: deck.title,
                 ),
+                if (deck.cardCount > 0) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppDarkColors.accent,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () => context.push(
+                          AppRoutes.studyFor(deck.id),
+                          extra: deck.title,
+                        ),
+                        icon: const Icon(LucideIcons.layers, size: 18),
+                        label: const Text('Học flashcard'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push(
+                          AppRoutes.quizFor(widget.subjectId, deck.id),
+                        ),
+                        icon: const Icon(LucideIcons.bookOpen, size: 18),
+                        label: const Text('Làm quiz'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },

@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'core/config/app_updates.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/academic_ambient_background.dart';
@@ -36,6 +38,9 @@ void main() {
       flashcardRepository: flashcardRepository,
       quizRepository: QuizRepository(api),
       groupsRepository: GroupsRepository(api),
+      updates: !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+          ? AppUpdates()
+          : null,
     ),
   );
   auth.restoreSession();
@@ -52,6 +57,7 @@ class QuizManagementApp extends StatefulWidget {
     required this.flashcardRepository,
     required this.quizRepository,
     required this.groupsRepository,
+    this.updates,
   });
 
   final AuthController auth;
@@ -61,6 +67,7 @@ class QuizManagementApp extends StatefulWidget {
   final FlashcardRepository flashcardRepository;
   final QuizRepository quizRepository;
   final GroupsRepository groupsRepository;
+  final AppUpdates? updates;
 
   @override
   State<QuizManagementApp> createState() => _QuizManagementAppState();
@@ -85,6 +92,7 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
         Provider<FlashcardRepository>.value(value: widget.flashcardRepository),
         Provider<QuizRepository>.value(value: widget.quizRepository),
         Provider<GroupsRepository>.value(value: widget.groupsRepository),
+        Provider<AppUpdates?>.value(value: widget.updates),
         ChangeNotifierProvider<AuthController>.value(value: widget.auth),
       ],
       child: ValueListenableBuilder<ThemeMode>(
@@ -100,7 +108,12 @@ class _QuizManagementAppState extends State<QuizManagementApp> {
             builder: (context, child) {
               return Stack(
                 children: [
-                  const Positioned.fill(child: AcademicAmbientBackground()),
+                  const Positioned.fill(
+                    child: AcademicAmbientBackground(
+                      animate: false,
+                      showRunes: false,
+                    ),
+                  ),
                   if (child != null) child,
                 ],
               );

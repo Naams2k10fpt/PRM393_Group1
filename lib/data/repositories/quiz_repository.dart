@@ -1,4 +1,5 @@
 import '../api/api_client.dart';
+import '../models/quiz_statistics.dart';
 
 class QuizRepository {
   QuizRepository(this.api);
@@ -75,6 +76,10 @@ class QuizRepository {
   Future<QuizHistoryPage> history(int page) async => QuizHistoryPage.fromJson(
     await api.get('/api/history/user', query: {'page': page})
         as Map<String, dynamic>,
+  );
+
+  Future<QuizStatistics> statistics() async => QuizStatistics.fromJson(
+    await api.get('/api/history/statistics') as Map<String, dynamic>,
   );
 
   Future<QuizResult> result(int id) async => QuizResult.fromJson(

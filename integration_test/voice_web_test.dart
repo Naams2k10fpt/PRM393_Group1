@@ -41,7 +41,9 @@ void main() {
             g.id ==
             const int.fromEnvironment('VOICE_TEST_GROUP', defaultValue: 1),
       );
-      final channels = await groups.voiceChannels(group.id);
+      final channels = (await groups.channels(group.id))
+          .where((channel) => channel.kind == 1)
+          .toList();
       expect(channels, isNotEmpty);
       VoiceRoomController? call;
       Future<void> until(

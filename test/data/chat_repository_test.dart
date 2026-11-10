@@ -9,10 +9,12 @@ class ChatRecordingApi extends ApiClient {
   ChatRecordingApi() : super(tokens: InMemoryTokenStorage());
   FormData? form;
   String? path;
+  int getCount = 0;
   List<Map<String, dynamic>> channelResponse = [];
   @override
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) async {
     this.path = path;
+    getCount++;
     return channelResponse;
   }
 
@@ -35,7 +37,7 @@ class ChatRecordingApi extends ApiClient {
 
 void main() {
   test(
-    'mobile text navigation accepts legacy channels and excludes voice rooms',
+    'one response preserves text, voice and legacy channel kinds',
     () async {
       final api = ChatRecordingApi();
       Map<String, dynamic> channel(int id, String name, [int? kind]) => {
@@ -55,16 +57,10 @@ void main() {
       final channels = await GroupsRepository(api).channels(7);
 
       expect(api.path, '/api/groups/7/channels');
-      expect(channels.map((channel) => channel.id), [1, 3, 4]);
-      final voice = await GroupsRepository(api).voiceChannels(7);
-      expect(voice.map((channel) => channel.id), [2]);
-      expect(voice.single.kind, 1);
+      expect(api.getCount, 1);
+      expect(channels.map((channel) => channel.id), [1, 2, 3, 4]);
+      expect(channels.map((channel) => channel.kind), [0, 1, 0, 0]);
       expect(channels.first.isDefault, isTrue);
-      expect(channels.map((channel) => channel.name), [
-        'chung',
-        'legacy',
-        'bai-tap',
-      ]);
     },
   );
 

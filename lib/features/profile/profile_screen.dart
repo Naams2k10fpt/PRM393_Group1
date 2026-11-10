@@ -3,8 +3,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_updates.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_update_widgets.dart';
 import '../../data/models/app_user.dart';
 import '../auth/auth_controller.dart';
 
@@ -69,12 +71,14 @@ class ProfileScreen extends StatelessWidget {
                     final isDark = mode == ThemeMode.dark;
                     return SwitchListTile(
                       secondary: Icon(isDark ? LucideIcons.moon : LucideIcons.sun),
-                      title: const Text('Giao diện tối (Dark Mode)'),
+                      title: const Text('Giao diện tối'),
+                      subtitle: const Text('Phòng chơi Kahoot luôn dùng nền tối.'),
                       value: isDark,
                       onChanged: (_) => AppTheme.toggleTheme(),
                     );
                   },
                 ),
+                if (context.read<AppUpdates?>() != null) const AppVersionTile(),
               ],
             ),
           ),

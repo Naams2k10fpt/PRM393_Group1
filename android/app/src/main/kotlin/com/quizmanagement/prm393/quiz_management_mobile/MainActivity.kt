@@ -4,7 +4,11 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import com.cloudwebrtc.webrtc.FlutterRTCVideoRenderer
 
 class MainActivity : FlutterActivity() {
@@ -13,6 +17,41 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "quizms/app_updates")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "installed" -> {
+                        @Suppress("DEPRECATION")
+                        val info = packageManager.getPackageInfo(packageName, 0)
+                        @Suppress("DEPRECATION")
+                        val build = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            info.longVersionCode
+                        } else {
+                            info.versionCode.toLong()
+                        }
+                        result.success(mapOf(
+                            "versionName" to info.versionName,
+                            "versionCode" to build,
+                            "abis" to Build.SUPPORTED_ABIS.toList()
+                        ))
+                    }
+                    "openUpdate" -> {
+                        val url = call.arguments as? String
+                        val uri = url?.let { Uri.parse(it) }
+                        if (uri == null || uri.scheme != "https" || uri.host.isNullOrEmpty() || uri.userInfo != null) {
+                            result.error("invalid_update_url", "Expected an HTTPS release URL", null)
+                        } else {
+                            try {
+                                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                result.success(null)
+                            } catch (_: ActivityNotFoundException) {
+                                result.error("browser_unavailable", "No app can open the release URL", null)
+                            }
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "quizms/voice_permissions")
             .setMethodCallHandler { call, result ->
                 if (call.method == "awaitVideoRelease") {

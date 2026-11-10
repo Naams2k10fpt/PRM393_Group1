@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_management_mobile/core/config/app_updates.dart';
 import 'package:quiz_management_mobile/data/api/api_exception.dart';
 import 'package:quiz_management_mobile/features/auth/login_screen.dart';
 import 'package:quiz_management_mobile/features/profile/change_password_screen.dart';
@@ -29,7 +30,52 @@ const fieldError = ApiException(
   },
 );
 
+class _AvailableUpdate extends AppUpdates {
+  Uri? opened;
+
+  @override
+  Future<InstalledAppVersion> installed() async =>
+      const InstalledAppVersion('1.0.0', 2002, ['arm64-v8a']);
+
+  @override
+  Future<AndroidUpdate?> check() async =>
+      AndroidUpdate('1.1.0', Uri.parse('https://example.com/quizms.apk'));
+
+  @override
+  Future<void> open(AndroidUpdate update) async {
+    opened = update.url;
+  }
+}
+
 void main() {
+  testWidgets('optional update can be dismissed and reopened from profile', (tester) async {
+    final updates = _AvailableUpdate();
+    await TestApp(token: 'stored', updates: updates).start(tester);
+    expect(find.text('Có bản cập nhật 1.1.0'), findsOneWidget);
+    await tester.tap(find.byTooltip('Để sau'));
+    await tester.pumpAndSettle();
+    expect(find.text('Có bản cập nhật 1.1.0'), findsNothing);
+    expect(updates.opened, isNull);
+
+    await tester.tap(find.byTooltip('Hồ sơ'));
+    await tester.pumpAndSettle();
+    final check = find.text('Kiểm tra cập nhật');
+    await tester.scrollUntilVisible(check, 100);
+    expect(find.text('Phiên bản 1.0.0 · Bản dựng 2002'), findsOneWidget);
+    await tester.tap(check);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Để sau'));
+    await tester.pumpAndSettle();
+    expect(updates.opened, isNull);
+    expect(find.byType(ProfileScreen), findsOneWidget);
+
+    await tester.tap(check);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mở trang cập nhật'));
+    await tester.pumpAndSettle();
+    expect(updates.opened, Uri.parse('https://example.com/quizms.apk'));
+  });
+
   testWidgets('profile shows the signed-in user', (tester) async {
     await openProfile(tester);
 

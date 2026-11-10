@@ -12,7 +12,10 @@ class FlashcardRepository {
 
   /// Cards to study. `due` (the default) is new and due cards; `all` is the
   /// whole deck, for a user who wants to revise ahead of schedule.
-  Future<FlashcardSession> session(String deckId, {bool studyAll = false}) async {
+  Future<FlashcardSession> session(
+    String deckId, {
+    bool studyAll = false,
+  }) async {
     final body = await _api.get(
       '/api/decks/$deckId/flashcards',
       query: {'mode': studyAll ? 'all' : 'due'},
@@ -25,13 +28,18 @@ class FlashcardRepository {
     required String deckId,
     required String questionId,
     required bool remembered,
+    String? reviewId,
   }) async {
-    final body = await _api.post('/api/flashcards/progress', data: {
-      // The backend binds these as ints, so send numbers when the ids are numeric.
-      'deckId': _asNumberOrString(deckId),
-      'questionId': _asNumberOrString(questionId),
-      'remembered': remembered,
-    });
+    final body = await _api.post(
+      '/api/flashcards/progress',
+      data: {
+        // The backend binds these as ints, so send numbers when the ids are numeric.
+        'deckId': _asNumberOrString(deckId),
+        'questionId': _asNumberOrString(questionId),
+        'remembered': remembered,
+        if (reviewId != null) 'reviewId': reviewId,
+      },
+    );
     return FlashcardReview.fromJson(body as Map<String, dynamic>);
   }
 

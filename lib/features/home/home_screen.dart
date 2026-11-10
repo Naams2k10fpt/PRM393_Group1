@@ -4,14 +4,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_updates.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_update_widgets.dart';
 import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/models/subject.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../auth/auth_controller.dart';
+import '../catalog/catalog_favorites.dart';
 import '../profile/profile_screen.dart';
 import 'widgets/subject_card.dart';
 
@@ -29,11 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _busy = true;
   ApiException? _error;
   List<Subject> _subjects = const [];
+  late final _favorites = CatalogFavorites(
+    context.read<AuthController>().user!.id,
+    FavoriteKind.subject,
+  );
 
   @override
   void initState() {
     super.initState();
+    _favorites.restore();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _favorites.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -66,17 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const BrandLogo(size: 32, showText: true),
         actions: [
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: AppTheme.themeModeNotifier,
-            builder: (context, mode, _) {
-              final isDark = mode == ThemeMode.dark;
-              return IconButton(
-                tooltip: isDark ? 'Chế độ Sáng' : 'Chế độ Tối',
-                icon: Icon(isDark ? LucideIcons.sun : LucideIcons.moon),
-                onPressed: AppTheme.toggleTheme,
-              );
-            },
-          ),
           if (user != null)
             IconButton(
               tooltip: 'Hồ sơ',
@@ -110,6 +112,38 @@ class _HomeScreenState extends State<HomeScreen> {
               ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
               const SizedBox(height: 18),
             ],
+            if (context.read<AppUpdates?>() != null) const AppUpdateNotice(),
+            Text('Môn học', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            ..._subjectSection(),
+            const SizedBox(height: 24),
+            Text('Tiện ích học tập', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(LucideIcons.bookOpen, color: Theme.of(context).colorScheme.primary, size: 22),
+                ),
+                title: const Text('Quiz cá nhân', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () => context.push(AppRoutes.quiz),
+              ),
+            ).animate().fadeIn(duration: 350.ms, delay: 140.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
+            const SizedBox(height: 4),
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -154,31 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(LucideIcons.bookOpen, color: Theme.of(context).colorScheme.primary, size: 22),
-                ),
-                title: const Text('Quiz cá nhân', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Làm bài, xem kết quả và lịch sử'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => context.push(AppRoutes.quiz),
-              ),
-            ).animate().fadeIn(duration: 350.ms, delay: 140.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
-            const SizedBox(height: 4),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
                     color: Colors.teal.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -190,10 +199,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () => context.push(AppRoutes.groups),
               ),
             ).animate().fadeIn(duration: 350.ms, delay: 200.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
-                const SizedBox(height: 24),
-                Text('Môn học', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 12),
-                ..._subjectSection(),
               ],
             ),
           ),
@@ -244,35 +249,48 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return [
-      GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _subjects.length,
-        // A fixed column count plus an aspect ratio makes every card as tall as
-        // half the viewport is wide, which is fine on a phone and absurd on a
-        // desktop browser. Sizing by extent keeps the card the same height
-        // everywhere and simply fits more columns on a wide screen.
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 220,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: 160,
-        ),
-        itemBuilder: (context, index) {
-          final subject = _subjects[index];
-          return SubjectCard(
-            subject: subject,
-            index: index,
-            // The name rides along so the deck list can title itself without a second request.
-            onTap:
-                () => context.push(
+      ListenableBuilder(
+        listenable: _favorites,
+        builder: (context, _) {
+          final subjects = _favorites.ordered(
+            _subjects,
+            (subject) => subject.id,
+          );
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: subjects.length,
+            // A fixed column count plus an aspect ratio makes every card as tall as
+            // half the viewport is wide, which is fine on a phone and absurd on a
+            // desktop browser. Sizing by extent keeps the card the same height
+            // everywhere and simply fits more columns on a wide screen.
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 160,
+            ),
+            itemBuilder: (context, index) {
+              final subject = subjects[index];
+              return SubjectCard(
+                key: ValueKey(subject.id),
+                subject: subject,
+                favorite: CatalogFavoriteButton(
+                  favorites: _favorites,
+                  id: subject.id,
+                  name: subject.name,
+                ),
+                index: index,
+                // The name rides along so the deck list can title itself without a second request.
+                onTap: () => context.push(
                   AppRoutes.decksFor(subject.id),
                   extra: subject.name,
                 ),
+              );
+            },
           );
         },
       ),
     ];
   }
 }
-

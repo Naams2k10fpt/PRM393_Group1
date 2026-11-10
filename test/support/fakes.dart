@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_management_mobile/core/config/app_updates.dart';
 import 'package:quiz_management_mobile/data/api/api_client.dart';
 import 'package:quiz_management_mobile/data/api/token_storage.dart';
 import 'package:quiz_management_mobile/data/api/api_exception.dart';
@@ -154,6 +155,19 @@ const demoFlashcards = [
     content: 'Widget trong Flutter là gì?',
     correctAnswers: ['Đơn vị dựng giao diện'],
     explanation: 'Mọi thứ hiển thị đều là widget.',
+    options: [
+      FlashcardOption(
+        id: '1',
+        content: 'Đơn vị dựng giao diện',
+        isCorrect: true,
+      ),
+      FlashcardOption(id: '2', content: 'Một loại biến', isCorrect: false),
+      FlashcardOption(
+        id: '3',
+        content: 'Thành phần tái sử dụng',
+        isCorrect: true,
+      ),
+    ],
   ),
   Flashcard(
     questionId: '101',
@@ -195,13 +209,11 @@ class FakeCatalogRepository implements CatalogRepository {
     if (decksError != null) throw decksError!;
     return deckList.firstWhere(
       (deck) => deck.id == deckId,
-      orElse:
-          () =>
-              throw const ApiException(
-                code: 'deck_not_found',
-                message: 'Không tìm thấy bộ đề.',
-                statusCode: 404,
-              ),
+      orElse: () => throw const ApiException(
+        code: 'deck_not_found',
+        message: 'Không tìm thấy bộ đề.',
+        statusCode: 404,
+      ),
     );
   }
 }
@@ -219,8 +231,11 @@ class FakeFlashcardRepository implements FlashcardRepository {
 
   ApiException? loadError;
   ApiException? reviewError;
+  Future<void>? reviewGate;
   final reviews = <({String questionId, bool remembered})>[];
+  final reviewIds = <String?>[];
   final calls = <String>[];
+  final _progress = <String, FlashcardProgress>{};
 
   @override
   Future<FlashcardSession> session(
@@ -229,13 +244,29 @@ class FakeFlashcardRepository implements FlashcardRepository {
   }) async {
     calls.add('session:$deckId:${studyAll ? 'all' : 'due'}');
     if (loadError != null) throw loadError!;
+    final available = [
+      for (final card in cards)
+        Flashcard(
+          questionId: card.questionId,
+          content: card.content,
+          questionType: card.questionType,
+          explanation: card.explanation,
+          correctAnswers: card.correctAnswers,
+          options: card.options,
+          progress: _progress[card.questionId] ?? card.progress,
+        ),
+    ];
+    final now = DateTime.now();
+    final due = available
+        .where((card) => card.progress?.nextReviewAtUtc?.isAfter(now) != true)
+        .toList();
     return FlashcardSession(
       deckId: deckId,
       deckName: 'Flutter cơ bản',
       totalCards: totalCards ?? cards.length,
-      dueCards: cards.length,
+      dueCards: due.length,
       studyingAll: studyAll,
-      cards: studyAll ? cards : cards,
+      cards: studyAll ? available : due,
     );
   }
 
@@ -244,14 +275,24 @@ class FakeFlashcardRepository implements FlashcardRepository {
     required String deckId,
     required String questionId,
     required bool remembered,
+    String? reviewId,
   }) async {
     calls.add('review:$questionId:$remembered');
+    reviewIds.add(reviewId);
+    if (reviewGate case final gate?) await gate;
     if (reviewError != null) throw reviewError!;
     reviews.add((questionId: questionId, remembered: remembered));
+    final interval = remembered ? 1440 : 10;
+    final progress = FlashcardProgress(
+      repetition: remembered ? (_progress[questionId]?.repetition ?? 0) + 1 : 0,
+      nextReviewAtUtc: DateTime.now().add(Duration(minutes: interval)),
+    );
+    _progress[questionId] = progress;
     return FlashcardReview(
       questionId: questionId,
-      repetition: 1,
-      intervalMinutes: 10,
+      repetition: progress.repetition,
+      intervalMinutes: interval,
+      nextReviewAtUtc: progress.nextReviewAtUtc,
     );
   }
 }
@@ -265,6 +306,7 @@ class TestApp {
     FakeFlashcardRepository? flashcards,
     QuizRepository? quiz,
     GroupsRepository? groups,
+    this.updates,
   }) : authRepository = FakeAuthRepository(token: token),
        profileRepository = profile ?? FakeProfileRepository(),
        catalogRepository = catalog ?? FakeCatalogRepository(),
@@ -283,6 +325,7 @@ class TestApp {
   final FakeFlashcardRepository flashcardRepository;
   final QuizRepository quizRepository;
   final GroupsRepository groupsRepository;
+  final AppUpdates? updates;
   late final AuthController auth;
 
   Future<void> start(WidgetTester tester) async {
@@ -300,6 +343,7 @@ class TestApp {
         flashcardRepository: flashcardRepository,
         quizRepository: quizRepository,
         groupsRepository: groupsRepository,
+        updates: updates,
       ),
     );
     await auth.restoreSession();
