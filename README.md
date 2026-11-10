@@ -48,6 +48,21 @@ when building for a phone (`http://10.0.2.2:5039` for an Android emulator).
 The current release build uses the debug signing key for demos. Configure a release
 keystore before distributing through an app store. iOS builds require macOS and Xcode.
 
+### Android updates
+
+The Android app checks for optional updates on Home. **Hồ sơ → Kiểm tra cập nhật**
+shows the installed version and lets the user check again. The update action
+opens the official HTTPS release link.
+
+When publishing an APK, increase the build number in `pubspec.yaml` and sign it
+with the same key as the installed app. Once the artifact is available, set
+`AppUpdates__Android__VersionName`, `AppUpdates__Android__VersionCode`,
+`AppUpdates__Android__Abi`, and `AppUpdates__Android__UpdateUrl` on the backend
+used by the Android build. Use the APK's actual manifest version code (for
+example, build `3` produces `2003` for the ARM64 split) and `arm64-v8a` for that
+split. The URL must be reachable by the intended users. Leave the settings
+unset until an update is ready to distribute.
+
 Demo account (also on Render): `user.demo@quiz.local` / `Test@123456`.
 
 Project layout and conventions: see [CLAUDE.md](CLAUDE.md).

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_management_mobile/core/config/app_updates.dart';
 import 'package:quiz_management_mobile/data/api/api_client.dart';
 import 'package:quiz_management_mobile/data/api/token_storage.dart';
 import 'package:quiz_management_mobile/data/api/api_exception.dart';
@@ -304,6 +305,7 @@ class TestApp {
     FakeFlashcardRepository? flashcards,
     QuizRepository? quiz,
     GroupsRepository? groups,
+    this.updates,
   }) : authRepository = FakeAuthRepository(token: token),
        profileRepository = profile ?? FakeProfileRepository(),
        catalogRepository = catalog ?? FakeCatalogRepository(),
@@ -322,6 +324,7 @@ class TestApp {
   final FakeFlashcardRepository flashcardRepository;
   final QuizRepository quizRepository;
   final GroupsRepository groupsRepository;
+  final AppUpdates? updates;
   late final AuthController auth;
 
   Future<void> start(WidgetTester tester) async {
@@ -339,6 +342,7 @@ class TestApp {
         flashcardRepository: flashcardRepository,
         quizRepository: quizRepository,
         groupsRepository: groupsRepository,
+        updates: updates,
       ),
     );
     await auth.restoreSession();

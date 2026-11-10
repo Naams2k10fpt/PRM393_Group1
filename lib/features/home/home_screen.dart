@@ -4,8 +4,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_updates.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_update_widgets.dart';
 import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/api/api_exception.dart';
@@ -110,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
               const SizedBox(height: 18),
             ],
+              if (context.read<AppUpdates?>() != null) const AppUpdateNotice(),
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
