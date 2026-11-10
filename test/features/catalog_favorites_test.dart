@@ -22,6 +22,13 @@ void main() {
     final deckStar = find.byTooltip('Yêu thích: State management');
     final deckUnstar = find.byTooltip('Bỏ yêu thích: State management');
 
+    await tester.tapAt(tester.getCenter(subjectStar) - const Offset(15, 0));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Lập trình .NET'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(subjectStar, findsOneWidget);
+
     await tester.tap(subjectStar);
     await tester.pumpAndSettle();
     expect(subjectUnstar, findsOneWidget);
@@ -34,7 +41,7 @@ void main() {
     await tester.tap(otherSubject);
     await tester.pumpAndSettle();
     await tester.ensureVisible(deckStar);
-    await tester.tapAt(tester.getCenter(deckStar) - const Offset(21, 0));
+    await tester.tapAt(tester.getCenter(deckStar) - const Offset(15, 0));
     await tester.pumpAndSettle();
     expect(deckUnstar, findsNothing);
 

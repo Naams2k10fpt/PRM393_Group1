@@ -83,36 +83,40 @@ class CatalogFavoriteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected = favorites.contains(id);
     final theme = Theme.of(context);
-    return IconButton(
-      style: IconButton.styleFrom(
-        minimumSize: const Size.square(36),
-        padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return Padding(
+      padding: const EdgeInsets.all(6),
+      child: IconButton(
+        style: IconButton.styleFrom(
+          iconSize: 24,
+          minimumSize: const Size.square(24),
+          padding: EdgeInsets.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        tooltip: selected ? 'Bỏ yêu thích: $name' : 'Yêu thích: $name',
+        isSelected: selected,
+        icon: Icon(
+          Icons.star_border_rounded,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        selectedIcon: Icon(
+          Icons.star_rounded,
+          color: theme.brightness == Brightness.dark
+              ? Colors.amber
+              : const Color(0xFF965600),
+        ),
+        onPressed: () async {
+          try {
+            await favorites.toggle(id);
+          } catch (_) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Chưa lưu được yêu thích. Hãy thử lại.'),
+              ),
+            );
+          }
+        },
       ),
-      tooltip: selected ? 'Bỏ yêu thích: $name' : 'Yêu thích: $name',
-      isSelected: selected,
-      icon: Icon(
-        Icons.star_border_rounded,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-      selectedIcon: Icon(
-        Icons.star_rounded,
-        color: theme.brightness == Brightness.dark
-            ? Colors.amber
-            : const Color(0xFF965600),
-      ),
-      onPressed: () async {
-        try {
-          await favorites.toggle(id);
-        } catch (_) {
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Chưa lưu được yêu thích. Hãy thử lại.'),
-            ),
-          );
-        }
-      },
     );
   }
 }
