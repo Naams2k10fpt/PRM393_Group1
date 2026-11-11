@@ -5,6 +5,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val releaseKeystore = providers.environmentVariable("QUIZ_ANDROID_KEYSTORE")
+
 android {
     namespace = "com.quizmanagement.prm393.quiz_management_mobile"
     compileSdk = flutter.compileSdkVersion
@@ -26,11 +28,21 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (releaseKeystore.isPresent) {
+            create("production") {
+                storeFile = file(releaseKeystore.get())
+                storePassword = providers.environmentVariable("QUIZ_ANDROID_STORE_PASSWORD").get()
+                keyAlias = "quizmanagement"
+                keyPassword = storePassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Local demo builds and CI do not have the production signing key.
+            signingConfig = signingConfigs.findByName("production") ?: signingConfigs.getByName("debug")
         }
     }
 }

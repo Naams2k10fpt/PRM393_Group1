@@ -45,8 +45,12 @@ Android release build. Live tests require an isolated backend and are opt-in.
 The development fallback is `http://localhost:5039`; always set `API_BASE_URL`
 when building for a phone (`http://10.0.2.2:5039` for an Android emulator).
 
-The current release build uses the debug signing key for demos. Configure a release
-keystore before distributing through an app store. iOS builds require macOS and Xcode.
+For a public Android release, set `QUIZ_ANDROID_KEYSTORE` to the production
+keystore path and `QUIZ_ANDROID_STORE_PASSWORD` to its password. The keystore
+uses the alias `quizmanagement` and the same password for the key and store.
+Keep the keystore and password private and reuse them for every update. Builds
+without these settings use the debug key for local demos and CI.
+iOS builds require macOS and Xcode.
 
 ### Android updates
 
@@ -59,7 +63,7 @@ with the same key as the installed app. Once the artifact is available, set
 `AppUpdates__Android__VersionName`, `AppUpdates__Android__VersionCode`,
 `AppUpdates__Android__Abi`, and `AppUpdates__Android__UpdateUrl` on the backend
 used by the Android build. Use the APK's actual manifest version code (for
-example, build `3` produces `2003` for the ARM64 split) and `arm64-v8a` for that
+example, build `4` produces `2004` for the ARM64 split) and `arm64-v8a` for that
 split. The URL must be reachable by the intended users. Leave the settings
 unset until an update is ready to distribute.
 
