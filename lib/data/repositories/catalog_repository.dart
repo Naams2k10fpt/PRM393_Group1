@@ -3,7 +3,9 @@ import '../models/deck.dart';
 import '../models/json.dart';
 import '../models/subject.dart';
 
-/// `/api/subjects` and `/api/decks`. Read-only catalogue behind the Home and Deck
+enum FavoriteKind { subject, deck }
+
+/// Catalogue and account favorites behind the Home and Deck
 /// screens. Failures stay as [ApiException] for the controller to show.
 class CatalogRepository {
   CatalogRepository(this._api);
@@ -27,5 +29,45 @@ class CatalogRepository {
   Future<Deck> deck(String deckId) async {
     final body = await _api.get('/api/decks/$deckId');
     return Deck.fromJson(body as Map<String, dynamic>);
+  }
+
+  Future<Set<String>> favoriteIds(FavoriteKind kind) async {
+    final ids = await _api.get('/api/favorites/${kind.name}s') as List;
+    return ids.map((id) => id.toString()).toSet();
+  }
+
+  Future<void> setFavorite(
+    String accountId,
+    FavoriteKind kind,
+    String id,
+    bool favorite,
+  ) async {
+    await _api.put(
+      '/api/favorites/${kind.name}s/$id',
+      data: {'accountId': accountId, 'favorite': favorite},
+    );
+  }
+
+  Future<void> importFavorites(
+    String accountId,
+    FavoriteKind kind,
+    List<String> legacyIds,
+  ) async {
+    final ids = legacyIds
+        .map(int.tryParse)
+        .whereType<int>()
+        .where((id) => id > 0 && id <= 2147483647)
+        .toSet()
+        .toList();
+    const batchSize = 500;
+    for (var start = 0; start < ids.length; start += batchSize) {
+      await _api.post(
+        '/api/favorites/${kind.name}s/import',
+        data: {
+          'accountId': accountId,
+          'ids': ids.skip(start).take(batchSize).toList(),
+        },
+      );
+    }
   }
 }
