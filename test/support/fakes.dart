@@ -187,7 +187,40 @@ class FakeCatalogRepository implements CatalogRepository {
   List<Deck> deckList;
   ApiException? subjectsError;
   ApiException? decksError;
+  ApiException? favoriteWriteError;
+  final _favorites = {
+    for (final kind in FavoriteKind.values) kind: <String, bool>{},
+  };
   final calls = <String>[];
+
+  @override
+  Future<Set<String>> favoriteIds(FavoriteKind kind) async => {
+    for (final entry in _favorites[kind]!.entries)
+      if (entry.value) entry.key,
+  };
+
+  @override
+  Future<void> setFavorite(
+    String accountId,
+    FavoriteKind kind,
+    String id,
+    bool favorite,
+  ) async {
+    if (favoriteWriteError case final error?) throw error;
+    _favorites[kind]![id] = favorite;
+  }
+
+  @override
+  Future<void> importFavorites(
+    String accountId,
+    FavoriteKind kind,
+    List<String> legacyIds,
+  ) async {
+    if (favoriteWriteError case final error?) throw error;
+    for (final id in legacyIds) {
+      _favorites[kind]!.putIfAbsent(id, () => true);
+    }
+  }
 
   @override
   Future<List<Subject>> subjects() async {

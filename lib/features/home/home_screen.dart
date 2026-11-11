@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ApiException? _error;
   List<Subject> _subjects = const [];
   late final _favorites = CatalogFavorites(
+    context.read<CatalogRepository>(),
     context.read<AuthController>().user!.id,
     FavoriteKind.subject,
   );
@@ -39,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _favorites.restore();
     _load();
   }
 
@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     final catalog = context.read<CatalogRepository>();
+    final favorites = _favorites.restore();
     setState(() {
       _busy = true;
       _error = null;
@@ -68,6 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _error = error;
         _busy = false;
       });
+    } finally {
+      await favorites;
     }
   }
 

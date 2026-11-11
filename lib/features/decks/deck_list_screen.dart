@@ -29,6 +29,7 @@ class _DeckListScreenState extends State<DeckListScreen> {
   ApiException? _error;
   List<Deck> _decks = const [];
   late final _favorites = CatalogFavorites(
+    context.read<CatalogRepository>(),
     context.read<AuthController>().user!.id,
     FavoriteKind.deck,
   );
@@ -36,7 +37,6 @@ class _DeckListScreenState extends State<DeckListScreen> {
   @override
   void initState() {
     super.initState();
-    _favorites.restore();
     _load();
   }
 
@@ -48,6 +48,7 @@ class _DeckListScreenState extends State<DeckListScreen> {
 
   Future<void> _load() async {
     final catalog = context.read<CatalogRepository>();
+    final favorites = _favorites.restore();
     setState(() {
       _busy = true;
       _error = null;
@@ -65,6 +66,8 @@ class _DeckListScreenState extends State<DeckListScreen> {
         _error = error;
         _busy = false;
       });
+    } finally {
+      await favorites;
     }
   }
 

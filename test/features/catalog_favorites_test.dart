@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiz_management_mobile/core/config/app_config.dart';
+import 'package:quiz_management_mobile/data/repositories/catalog_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fakes.dart';
@@ -9,9 +13,10 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
+    final catalog = FakeCatalogRepository();
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(320, 568));
-    await TestApp(token: 'token').start(tester);
+    await TestApp(token: 'token', catalog: catalog).start(tester);
 
     final subject = find.text('Lập trình .NET');
     final otherSubject = find.text('Lập trình di động');
@@ -55,7 +60,8 @@ void main() {
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    await TestApp(token: 'token').start(tester);
+    SharedPreferences.setMockInitialValues({});
+    await TestApp(token: 'token', catalog: catalog).start(tester);
     expect(subjectUnstar, findsOneWidget);
     await tester.tap(otherSubject);
     await tester.pumpAndSettle();
@@ -67,5 +73,35 @@ void main() {
       tester.getTopLeft(deck).dy,
       greaterThan(tester.getTopLeft(otherDeck).dy),
     );
+  });
+
+  testWidgets('opening Home retries unsynced legacy stars for both kinds', (
+    tester,
+  ) async {
+    String legacyKey(FavoriteKind kind) =>
+        'catalog.favorites.v1.${jsonEncode([AppConfig.baseUrl, demoUser.id, kind.name])}';
+    final subjectsKey = legacyKey(FavoriteKind.subject);
+    final decksKey = legacyKey(FavoriteKind.deck);
+    SharedPreferences.setMockInitialValues({
+      subjectsKey: ['2'],
+      decksKey: ['11'],
+    });
+    final catalog = FakeCatalogRepository()..favoriteWriteError = offline;
+    await TestApp(token: 'token', catalog: catalog).start(tester);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getStringList(subjectsKey), ['2']);
+    expect(prefs.getStringList(decksKey), ['11']);
+    expect(await catalog.favoriteIds(FavoriteKind.deck), isEmpty);
+
+    catalog.favoriteWriteError = null;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await TestApp(token: 'token', catalog: catalog).start(tester);
+
+    expect(await catalog.favoriteIds(FavoriteKind.subject), {'2'});
+    expect(await catalog.favoriteIds(FavoriteKind.deck), {'11'});
+    expect(prefs.containsKey(subjectsKey), isFalse);
+    expect(prefs.containsKey(decksKey), isFalse);
+    expect(find.byTooltip('Bỏ yêu thích: Lập trình .NET'), findsOneWidget);
   });
 }
